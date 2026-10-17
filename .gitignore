@@ -47,3 +47,4 @@ captures/
 # Web / Node
 node_modules/
 dist/
+kotlin-js-store/
