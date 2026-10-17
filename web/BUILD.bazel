@@ -19,11 +19,12 @@ load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# Package web distribution artifacts including index.html host page
+# Package web distribution artifacts including index.html host page and JS engine
 genrule(
     name = "web_app",
     srcs = [
         "index.html",
+        "playground_bazel.js",
     ],
     outs = [
         "web_bundle.tar.gz",
@@ -31,6 +32,7 @@ genrule(
     cmd = """
         BUNDLE_DIR=$$(mktemp -d)
         cp $(location index.html) $$BUNDLE_DIR/index.html
+        cp $(location playground_bazel.js) $$BUNDLE_DIR/playground_bazel.js
         tar -czf $@ -C $$BUNDLE_DIR .
         rm -rf $$BUNDLE_DIR
     """,
@@ -43,5 +45,6 @@ sh_binary(
     data = [
         ":web_app",
         "index.html",
+        "playground_bazel.js",
     ],
 )
