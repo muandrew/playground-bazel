@@ -1,0 +1,33 @@
+load("@rules_android//rules:rules.bzl", "android_binary", "android_library")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_android_library(
+    name = "android_app_lib",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    custom_package = "com.example.sheet.android",
+    manifest = "AndroidManifest.xml",
+    kotlinc_opts = "//shared:kt_kotlinc_options",
+    plugins = [
+        "//shared:compose_compiler_plugin",
+    ],
+    deps = [
+        "//shared",
+        "@android_maven//:androidx_activity_activity_compose",
+        "@android_maven//:androidx_annotation_annotation",
+    ],
+)
+
+android_binary(
+    name = "android_app",
+    custom_package = "com.example.sheet.android",
+    manifest = "AndroidManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "24",
+        "targetSdkVersion": "34",
+    },
+    deps = [
+        ":android_app_lib",
+    ],
+)

@@ -1,0 +1,49 @@
+# Bazel symlinks and outputs
+bazel-*
+.bazelrc.user
+.bazelrc.local
+
+# Operating System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# JetBrains / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# Editor swap & backup files
+*~
+*.swp
+*.swo
+
+# Java & Kotlin build outputs
+*.class
+*.log
+.kotlin/
+.gradle/
+build/
+
+# Android specific
+local.properties
+captures/
+.externalNativeBuild
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Web / Node
+node_modules/
+dist/

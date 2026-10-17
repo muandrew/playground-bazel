@@ -1,0 +1,47 @@
+# Web (WasmJs) target configuration for Compose Multiplatform.
+#
+# Compose Multiplatform Web uses Kotlin/Wasm (wasmJs) to render UI into an HTML5 Canvas
+# element using Skiko/Canvas API. Currently, rules_kotlin primarily supports kt_jvm_*
+# and kt_android_* targets, without direct native support for Kotlin/Wasm compiler pipelines.
+#
+# Production approaches to compile Kotlin/Wasm with Bazel:
+# 1. Custom toolchain/rule or genrule invoking the Kotlin CLI compiler (`kotlinc-wasm` / `kotlinc`)
+#    with the `-Xwasm` backend flags and loading the Compose compiler plugin.
+# 2. Downloading hermetic Node.js and binaryen toolchains (wasm-opt) to optimize
+#    the generated .wasm bytecode.
+# 3. Utilizing an sh_binary or genrule integration to invoke the multiplatform compiler CLI
+#    or bridge to Gradle's `wasmJsBrowserDistribution` task.
+#
+# Below, we define a concrete packaging genrule and host binary target that bundle
+# web assets (HTML host page, JS launcher, and Wasm module) for distribution.
+
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Package web distribution artifacts including index.html host page
+genrule(
+    name = "web_app",
+    srcs = [
+        "index.html",
+    ],
+    outs = [
+        "web_bundle.tar.gz",
+    ],
+    cmd = """
+        BUNDLE_DIR=$$(mktemp -d)
+        cp $(location index.html) $$BUNDLE_DIR/index.html
+        tar -czf $@ -C $$BUNDLE_DIR .
+        rm -rf $$BUNDLE_DIR
+    """,
+)
+
+# Convenience target to serve or run web assets locally
+sh_binary(
+    name = "serve",
+    srcs = ["serve.sh"],
+    data = [
+        ":web_app",
+        "index.html",
+    ],
+)

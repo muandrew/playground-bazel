@@ -1,0 +1,39 @@
+load("@rules_kotlin//kotlin:core.bzl", "kt_compiler_plugin", "kt_kotlinc_options")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_kotlinc_options(
+    name = "kt_kotlinc_options",
+    jvm_target = "17",
+)
+
+# Compose Multiplatform compiler plugin for Kotlin 2.2.20
+kt_compiler_plugin(
+    name = "compose_compiler_plugin",
+    id = "androidx.compose.compiler.plugins.kotlin",
+    target_embedded_compiler = True,
+    deps = [
+        "@maven//:org_jetbrains_kotlin_kotlin_compose_compiler_plugin_embeddable",
+    ],
+)
+
+kt_jvm_library(
+    name = "shared",
+    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    kotlinc_opts = ":kt_kotlinc_options",
+    plugins = [":compose_compiler_plugin"],
+    deps = [
+        "@maven//:org_jetbrains_compose_animation_animation_desktop",
+        "@maven//:org_jetbrains_compose_components_components_resources_desktop",
+        "@maven//:org_jetbrains_compose_foundation_foundation_desktop",
+        "@maven//:org_jetbrains_compose_foundation_foundation_layout_desktop",
+        "@maven//:org_jetbrains_compose_material3_material3_desktop",
+        "@maven//:org_jetbrains_compose_runtime_runtime_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_graphics_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_text_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_unit_desktop",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+    ],
+)
