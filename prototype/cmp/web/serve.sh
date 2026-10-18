@@ -8,32 +8,37 @@ if [ -n "${BUILD_WORKSPACE_DIRECTORY:-}" ]; then
     ROOT_DIR="${BUILD_WORKSPACE_DIRECTORY}"
 elif [ -f "MODULE.bazel" ]; then
     ROOT_DIR="$(pwd)"
+elif [ -f "$(dirname "$0")/../../../MODULE.bazel" ]; then
+    ROOT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
 elif [ -f "$(dirname "$0")/../MODULE.bazel" ]; then
     ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 fi
 
 DIST_DIR=""
-if [ -n "${ROOT_DIR}" ] && [ -d "${ROOT_DIR}/web/build/dist/wasmJs/productionExecutable" ]; then
-    DIST_DIR="${ROOT_DIR}/web/build/dist/wasmJs/productionExecutable"
-elif [ -n "${ROOT_DIR}" ] && [ -f "${ROOT_DIR}/gradlew" ]; then
+CMP_DIR="${ROOT_DIR}/prototype/cmp"
+if [ -n "${ROOT_DIR}" ] && [ -d "${CMP_DIR}/web/build/dist/wasmJs/productionExecutable" ]; then
+    DIST_DIR="${CMP_DIR}/web/build/dist/wasmJs/productionExecutable"
+elif [ -n "${ROOT_DIR}" ] && [ -f "${CMP_DIR}/gradlew" ]; then
     echo "Building Kotlin/Wasm distribution via Gradle..."
-    (cd "${ROOT_DIR}" && ./gradlew :web:wasmJsBrowserDistribution)
-    DIST_DIR="${ROOT_DIR}/web/build/dist/wasmJs/productionExecutable"
+    (cd "${CMP_DIR}" && ./gradlew :web:wasmJsBrowserDistribution)
+    DIST_DIR="${CMP_DIR}/web/build/dist/wasmJs/productionExecutable"
 fi
 
 if [ -n "${DIST_DIR}" ] && [ -d "${DIST_DIR}" ]; then
     # Ensure index.html exists in distribution directory
-    if [ -n "${ROOT_DIR}" ] && [ -f "${ROOT_DIR}/web/index.html" ]; then
-        cp "${ROOT_DIR}/web/index.html" "${DIST_DIR}/index.html"
+    if [ -n "${ROOT_DIR}" ] && [ -f "${CMP_DIR}/web/index.html" ]; then
+        cp "${CMP_DIR}/web/index.html" "${DIST_DIR}/index.html"
     fi
     DIR="${DIST_DIR}"
     MODE="Real Kotlin/Wasm (WebAssembly + Skiko Canvas)"
 else
     # Fallback to runfiles or web directory
-    if [ -n "${RUNFILES_DIR:-}" ] && [ -d "${RUNFILES_DIR}/_main/web" ]; then
-        DIR="${RUNFILES_DIR}/_main/web"
-    elif [ -d "${0}.runfiles/_main/web" ]; then
-        DIR="${0}.runfiles/_main/web"
+    if [ -n "${RUNFILES_DIR:-}" ] && [ -d "${RUNFILES_DIR}/_main/prototype/cmp/web" ]; then
+        DIR="${RUNFILES_DIR}/_main/prototype/cmp/web"
+    elif [ -d "${0}.runfiles/_main/prototype/cmp/web" ]; then
+        DIR="${0}.runfiles/_main/prototype/cmp/web"
+    elif [ -d "prototype/cmp/web" ]; then
+        DIR="prototype/cmp/web"
     elif [ -d "web" ]; then
         DIR="web"
     else

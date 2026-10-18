@@ -6,12 +6,12 @@ kt_jvm_binary(
     name = "desktop_app",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
     main_class = "com.example.desktop.MainKt",
-    kotlinc_opts = "//shared:kt_kotlinc_options",
+    kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
     plugins = [
-        "//shared:compose_compiler_plugin",
+        "//prototype/cmp/shared:compose_compiler_plugin",
     ],
     deps = [
-        "//shared",
+        "//prototype/cmp/shared",
         "@maven//:org_jetbrains_compose_foundation_foundation_desktop",
         "@maven//:org_jetbrains_compose_material3_material3_desktop",
         "@maven//:org_jetbrains_compose_runtime_runtime_desktop",

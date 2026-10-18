@@ -8,12 +8,12 @@ kt_android_library(
     srcs = glob(["src/main/kotlin/**/*.kt"]),
     custom_package = "com.example.sheet.android",
     manifest = "AndroidManifest.xml",
-    kotlinc_opts = "//shared:kt_kotlinc_options",
+    kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
     plugins = [
-        "//shared:compose_compiler_plugin",
+        "//prototype/cmp/shared:compose_compiler_plugin",
     ],
     deps = [
-        "//shared",
+        "//prototype/cmp/shared",
         "@android_maven//:androidx_activity_activity_compose",
         "@android_maven//:androidx_annotation_annotation",
     ],
