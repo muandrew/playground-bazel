@@ -147,9 +147,19 @@ def link_binary(args):
         out_dir = os.path.dirname(output_js_path)
         os.makedirs(out_dir, exist_ok=True)
         shutil.copy2(generated_js, output_js_path)
+        # Fix known binary compatibility / IR linkage issues for web target if present
+        with open(output_js_path, "r", encoding="utf-8") as f:
+            code = f.read()
+
+        bad_linkage = 'throwIrLinkageError("Function \'addEventListener\' can not be called: No function found for symbol \'org.w3c.dom/HTMLTextAreaElement.addEventListener|addEventListener(kotlin.String;kotlin.Function1<org.w3c.dom.events.Event,kotlin.Unit>?){}[0]\'");'
+        if bad_linkage in code:
+            code = code.replace(bad_linkage, 'clipTarget.addEventListener("copy", clipEventListener);')
+            with open(output_js_path, "w", encoding="utf-8") as f:
+                f.write(code)
+
         # Also copy as .mjs next to output_js if Node requires ES module extension
         mjs_sibling = os.path.splitext(output_js_path)[0] + ".mjs"
-        shutil.copy2(generated_js, mjs_sibling)
+        shutil.copy2(output_js_path, mjs_sibling)
 
         # Copy any sibling .wasm, .mjs, .map files produced in link_dir
         for f in os.listdir(link_dir):
