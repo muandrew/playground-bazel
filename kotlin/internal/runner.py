@@ -144,11 +144,35 @@ def link_binary(args):
                 sys.exit(1)
 
         output_js_path = os.path.abspath(args.output_js)
-        os.makedirs(os.path.dirname(output_js_path), exist_ok=True)
+        out_dir = os.path.dirname(output_js_path)
+        os.makedirs(out_dir, exist_ok=True)
         shutil.copy2(generated_js, output_js_path)
         # Also copy as .mjs next to output_js if Node requires ES module extension
         mjs_sibling = os.path.splitext(output_js_path)[0] + ".mjs"
         shutil.copy2(generated_js, mjs_sibling)
+
+        # Copy any sibling .wasm, .mjs, .map files produced in link_dir
+        for f in os.listdir(link_dir):
+            src_f = os.path.join(link_dir, f)
+            if os.path.isfile(src_f) and f.endswith((".wasm", ".mjs", ".map")):
+                dest_f = os.path.join(out_dir, f)
+                if not os.path.exists(dest_f):
+                    shutil.copy2(src_f, dest_f)
+
+        # Copy companion runtime assets like skiko.mjs and skiko.wasm from library roots
+        dest_nm = os.path.join(out_dir, "node_modules")
+        os.makedirs(dest_nm, exist_ok=True)
+        for lib in libs:
+            lib_dir = os.path.dirname(os.path.realpath(lib))
+            for asset in ["skiko.mjs", "skiko.wasm", "js-reexport-symbols.mjs"]:
+                asset_p = os.path.join(lib_dir, asset)
+                if os.path.exists(asset_p):
+                    dest_asset = os.path.join(out_dir, asset)
+                    if not os.path.exists(dest_asset):
+                        shutil.copy2(asset_p, dest_asset)
+            nm_p = os.path.join(lib_dir, "node_modules")
+            if os.path.isdir(nm_p):
+                shutil.copytree(nm_p, dest_nm, dirs_exist_ok=True)
 
         if args.output_wasm:
             generated_wasm = os.path.join(link_dir, f"{args.module_name}.wasm")
@@ -162,6 +186,35 @@ def link_binary(args):
             os.makedirs(os.path.dirname(output_exec_path), exist_ok=True)
             js_name = os.path.basename(output_js_path)
             mjs_name = os.path.basename(mjs_sibling)
+            wrapper_code = r"""
+import fs from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+if (typeof globalThis.window === 'undefined') {
+  globalThis.window = globalThis;
+}
+if (typeof globalThis.XMLHttpRequest === 'undefined') {
+  globalThis.XMLHttpRequest = class {
+    open(method, url) { this.url = url; }
+    send() {
+      setTimeout(() => {
+        try {
+          const p = this.url.startsWith('file://') ? fileURLToPath(this.url) : this.url;
+          this.response = fs.readFileSync(p).buffer;
+          this.status = 200;
+          if (this.onload) this.onload();
+        } catch (e) {
+          if (this.onerror) this.onerror(e);
+        }
+      }, 0);
+    }
+  };
+}
+
+const targetPath = process.argv[2];
+await import(pathToFileURL(targetPath).href);
+""".strip()
+
             launcher_content = f"""#!/usr/bin/env bash
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -178,8 +231,23 @@ fi
 if [ -z "$TARGET_JS" ]; then
     TARGET_JS="{output_js_path}"
 fi
-if command -v node >/dev/null 2>&1; then
-    exec node "$TARGET_JS" "$@"
+
+NODE_BIN=""
+for cand_node in node /opt/homebrew/bin/node /usr/local/bin/node; do
+    if command -v "$cand_node" >/dev/null 2>&1; then
+        NODE_BIN="$(command -v "$cand_node")"
+        break
+    fi
+done
+
+if [ -n "$NODE_BIN" ]; then
+    NODE_TMP_DIR="$(mktemp -d "${{TMPDIR:-/tmp}}/node_launcher_XXXXXX")"
+    NODE_WRAPPER="$NODE_TMP_DIR/launcher.mjs"
+    trap 'rm -rf "$NODE_TMP_DIR"' EXIT
+    cat << 'EOF' > "$NODE_WRAPPER"
+{wrapper_code}
+EOF
+    exec "$NODE_BIN" "$NODE_WRAPPER" "$TARGET_JS" "$@"
 else
     echo "Warning: node command not found in PATH" >&2
     exit 0

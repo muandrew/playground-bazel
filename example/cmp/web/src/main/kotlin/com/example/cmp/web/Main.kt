@@ -1,88 +1,105 @@
 package com.example.cmp.web
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.ComposeViewport
 import com.example.cmp.libb.CounterButtonState
-import com.example.cmp.libb.DomElement
 import com.example.cmp.libb.SharedCounterButton
 import com.example.cmp.libb.rememberCounterButtonState
-import com.example.cmp.libb.renderComposeWeb
+import kotlinx.browser.document
 
 /**
- * Compose Web App UI rendering the shared Compose Multiplatform Counter Button.
+ * Compose Multiplatform Web Application UI.
+ * Renders the exact same Compose Material 3 UI and button onto HTML5 Canvas via Skiko.
  */
 @Composable
 fun WebCounterApp(state: CounterButtonState = rememberCounterButtonState()) {
-    DomElement(
-        tagName = "div",
-        className = "counter-card",
-    ) {
-        DomElement(
-            tagName = "h2",
-            className = "counter-title",
-            text = "Compose Multiplatform Web",
-        )
-        DomElement(
-            tagName = "p",
-            className = "counter-subtitle",
-            text = "Kotlin 2.3.21 • Compose 1.9.5 • Bzlmod",
-        )
-        // Shared Compose Button rendered directly by Compose Runtime
-        SharedCounterButton(state = state)
-        DomElement(
-            tagName = "p",
-            id = "shared-counter-status",
-            className = "counter-status",
-            text = state.statusText,
-        )
+    MaterialTheme(colorScheme = darkColorScheme()) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Compose Multiplatform Web (Canvas)",
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = "Kotlin 2.3.21 • Compose 1.9.5 (Skiko) • Bzlmod",
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                )
+                Spacer(modifier = Modifier.height(28.dp))
+
+                // Unified Compose Material 3 Button from commonMain
+                SharedCounterButton(state = state, modifier = Modifier.padding(8.dp))
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = state.statusText,
+                    fontSize = 14.sp,
+                    color = Color.LightGray,
+                )
+            }
+        }
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     println("==========================================================")
-    println(" Compose Multiplatform Web (JS/Wasm) App A")
-    println(" Compose-Rendered Shared Counter Button")
+    println(" Compose Multiplatform Web (Canvas/Skiko) App A")
+    println(" Shared Material 3 Button")
     println("==========================================================")
 
     val isBrowser: Boolean = js("typeof window !== 'undefined' && typeof document !== 'undefined'") as Boolean
     if (isBrowser) {
-        val mount = {
-            println("Mounting Compose Web Composition into #root element...")
-            renderComposeWeb(containerId = "root") {
+        val root = document.getElementById("root")
+        if (root != null) {
+            println("Attaching Skiko ComposeViewport to #root element...")
+            ComposeViewport(root) {
                 WebCounterApp()
             }
-            println("Compose Web Composition successfully mounted.")
-        }
-
-        val doc: dynamic = js("document")
-        if (doc.readyState == "loading") {
-            doc.addEventListener("DOMContentLoaded", { mount() })
+            println("ComposeViewport mounted successfully.")
         } else {
-            mount()
+            println("Warning: #root element not found in DOM.")
         }
     } else {
-        // Headless / Node execution: verify Compose Composition execution
-        println("Running headless Compose Web Composition verification...")
-        val counterState = CounterButtonState(initialCount = 0)
-        val composition = renderComposeWeb(containerId = "headless-root") {
-            WebCounterApp(state = counterState)
-        }
+        // Headless execution under Node.js: verify counter model and state
+        println("Running headless verification under Node.js...")
+        val state = CounterButtonState(initialCount = 0)
+        println("Initial button label: ${state.label}")
+        check(state.count == 0) { "Expected count 0 but was ${state.count}" }
 
-        println("Initial button label: ${counterState.label}")
-        check(counterState.count == 0) { "Expected count 0 but was ${counterState.count}" }
-
-        val c1 = counterState.onClick()
-        println("Click 1 -> ${counterState.label} (${counterState.statusText})")
+        val c1 = state.onClick()
+        println("Click 1 -> ${state.label} (${state.statusText})")
         check(c1 == 1) { "Expected count 1 but was $c1" }
 
-        val c2 = counterState.onClick()
-        println("Click 2 -> ${counterState.label} (${counterState.statusText})")
+        val c2 = state.onClick()
+        println("Click 2 -> ${state.label} (${state.statusText})")
         check(c2 == 2) { "Expected count 2 but was $c2" }
 
-        val c3 = counterState.onClick()
-        println("Click 3 -> ${counterState.label} (${counterState.statusText})")
+        val c3 = state.onClick()
+        println("Click 3 -> ${state.label} (${state.statusText})")
         check(c3 == 3) { "Expected count 3 but was $c3" }
 
-        composition.dispose()
-        println("Headless Compose Web verification passed successfully!")
+        println("Headless verification passed successfully!")
     }
 }

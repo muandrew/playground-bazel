@@ -1,29 +1,30 @@
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load("//kotlin:js.bzl", "kt_js_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-# Web App A binary (JS / Wasm target depending on Library B JS target)
+# Web App A binary (Compose Multiplatform Canvas/Skiko target)
 kt_js_binary(
     name = "web_app",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
     compose_enabled = True,
-    data = ["index.html"],
+    data = [
+        "index.html",
+        "@compose_ui_js//:skiko_mjs",
+        "@compose_ui_js//:skiko_wasm",
+    ],
     module_name = "web_app",
     deps = [
         "//example/cmp/libb:libb-js",
     ],
 )
 
-# Automated test verifying Web App A shared counter button logic under Node.js
-kt_js_test(
+# Automated test verifying Web App A logic under Node.js
+sh_test(
     name = "web_test",
-    srcs = glob(["src/main/kotlin/**/*.kt"]),
-    compose_enabled = True,
-    module_name = "web_test",
-    deps = [
-        "//example/cmp/libb:libb-js",
-    ],
+    srcs = ["test.sh"],
+    data = [":web_app"],
 )
 
 # Convenience target to serve web app locally in browser
@@ -33,5 +34,7 @@ sh_binary(
     data = [
         ":web_app",
         "index.html",
+        "@compose_ui_js//:skiko_mjs",
+        "@compose_ui_js//:skiko_wasm",
     ],
 )

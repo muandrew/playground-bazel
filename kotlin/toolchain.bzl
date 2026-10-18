@@ -7,6 +7,7 @@ def _kt_js_toolchain_impl(ctx):
         test_klib = ctx.file.test_klib,
         compose_plugin_jar = ctx.file.compose_plugin_jar,
         compose_runtime_klibs = ctx.files.compose_runtime_klibs,
+        compose_runtime_assets = ctx.files.compose_runtime_assets,
         target_version = ctx.attr.target_version,
         runner = ctx.executable._runner,
     )
@@ -38,6 +39,10 @@ kt_js_toolchain = rule(
         "compose_runtime_klibs": attr.label_list(
             allow_files = True,
             doc = "Compose runtime klibs required when compose_enabled is True.",
+        ),
+        "compose_runtime_assets": attr.label_list(
+            allow_files = True,
+            doc = "Compose runtime companion assets (wasm, mjs, node_modules).",
         ),
         "target_version": attr.string(
             default = "2.3.21",

@@ -127,6 +127,7 @@ def kt_js_binary_impl(ctx):
     args.add("--target", ctx.attr.target)
 
     extra_klibs = []
+    extra_assets = []
     plugin_inputs = []
     if ctx.attr.compose_enabled:
         if toolchain.compose_plugin_jar:
@@ -134,6 +135,8 @@ def kt_js_binary_impl(ctx):
             plugin_inputs.append(toolchain.compose_plugin_jar)
         if hasattr(toolchain, "compose_runtime_klibs") and toolchain.compose_runtime_klibs:
             extra_klibs.extend(toolchain.compose_runtime_klibs)
+        if hasattr(toolchain, "compose_runtime_assets") and toolchain.compose_runtime_assets:
+            extra_assets.extend(toolchain.compose_runtime_assets)
 
     stdlib = toolchain.stdlib_klib
     all_klibs = depset(
@@ -153,9 +156,17 @@ def kt_js_binary_impl(ctx):
             args.add(src.path)
 
     inputs = depset(
-        direct = ctx.files.srcs + [toolchain.compiler_jar] + plugin_inputs,
+        direct = ctx.files.srcs + [toolchain.compiler_jar] + plugin_inputs + extra_assets,
         transitive = [all_klibs],
     )
+
+    outputs = [output_js, output_executable]
+    if ctx.attr.compose_enabled:
+        output_skiko_mjs = ctx.actions.declare_file("skiko.mjs")
+        output_skiko_wasm = ctx.actions.declare_file("skiko.wasm")
+        output_skiko_reexport = ctx.actions.declare_file("js-reexport-symbols.mjs")
+        output_node_modules = ctx.actions.declare_directory("node_modules")
+        outputs.extend([output_skiko_mjs, output_skiko_wasm, output_skiko_reexport, output_node_modules])
 
     ctx.actions.run(
         mnemonic = "KotlincLinkJs",
@@ -163,14 +174,14 @@ def kt_js_binary_impl(ctx):
         executable = toolchain.runner,
         arguments = [args],
         inputs = inputs,
-        outputs = [output_js, output_executable],
+        outputs = outputs,
     )
 
-    runfiles = ctx.runfiles(files = [output_js] + ctx.files.data)
+    runfiles = ctx.runfiles(files = outputs + ctx.files.data)
     return [
         DefaultInfo(
             executable = output_executable,
-            files = depset([output_js, output_executable]),
+            files = depset(outputs),
             runfiles = runfiles,
         ),
         KtJsInfo(

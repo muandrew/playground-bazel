@@ -14,10 +14,19 @@ else
     DIR="$(dirname "$0")"
 fi
 
-# Copy compiled web_app.js into directory if built
-if [ -n "${BUILD_WORKSPACE_DIRECTORY:-}" ] && [ -f "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web/web_app.js" ]; then
-    cp "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web/web_app.js" "${DIR}/web_app.js"
+# Copy compiled web_app.js and Skiko Canvas assets if present
+if [ -n "${BUILD_WORKSPACE_DIRECTORY:-}" ]; then
+    if [ -f "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web/web_app.js" ]; then
+        cp "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web/web_app.js" "${DIR}/web_app.js"
+    fi
+    find "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin" \( -name "skiko.wasm" -o -name "skiko.mjs" -o -name "js-reexport-symbols.mjs" \) 2>/dev/null | while read -r asset; do
+        cp "$asset" "${DIR}/" 2>/dev/null || true
+    done
+    if [ -d "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web/node_modules" ]; then
+        cp -R "${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web/node_modules" "${DIR}/" 2>/dev/null || true
+    fi
 fi
+
 
 if [ ! -f "${DIR}/index.html" ]; then
     echo "Error: index.html not found in ${DIR}" >&2
