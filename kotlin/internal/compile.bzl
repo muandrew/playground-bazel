@@ -23,13 +23,6 @@ def _kt_compile_klib_action(
             direct_klibs.append(dep[KtJsInfo].klib)
             transitive_depsets.append(dep[KtJsInfo].transitive_klibs)
 
-    # Toolchain stdlib klib
-    stdlib = toolchain.stdlib_klib
-    all_klibs = depset(
-        direct = direct_klibs + ([stdlib] if stdlib else []),
-        transitive = transitive_depsets,
-    )
-
     args = ctx.actions.args()
     args.use_param_file("@%s", use_always = False)
     args.add("compile-klib")
@@ -38,13 +31,24 @@ def _kt_compile_klib_action(
     args.add("--compiler-jar", toolchain.compiler_jar.path)
     args.add("--backend", backend)
 
+    extra_klibs = []
+    plugin_inputs = []
+    if compose_enabled:
+        if toolchain.compose_plugin_jar:
+            args.add("--compose-plugin", toolchain.compose_plugin_jar.path)
+            plugin_inputs.append(toolchain.compose_plugin_jar)
+        if hasattr(toolchain, "compose_runtime_klibs") and toolchain.compose_runtime_klibs:
+            extra_klibs.extend(toolchain.compose_runtime_klibs)
+
+    # Toolchain stdlib klib + compose runtime klibs
+    stdlib = toolchain.stdlib_klib
+    all_klibs = depset(
+        direct = direct_klibs + ([stdlib] if stdlib else []) + extra_klibs,
+        transitive = transitive_depsets,
+    )
+
     for klib in all_klibs.to_list():
         args.add("--libraries", klib.path)
-
-    plugin_inputs = []
-    if compose_enabled and toolchain.compose_plugin_jar:
-        args.add("--compose-plugin", toolchain.compose_plugin_jar.path)
-        plugin_inputs.append(toolchain.compose_plugin_jar)
 
     for opt in kotlinc_opts:
         args.add("--kotlinc-opts", opt)
@@ -111,12 +115,6 @@ def kt_js_binary_impl(ctx):
             direct_klibs.append(dep[KtJsInfo].klib)
             transitive_depsets.append(dep[KtJsInfo].transitive_klibs)
 
-    stdlib = toolchain.stdlib_klib
-    all_klibs = depset(
-        direct = direct_klibs + ([stdlib] if stdlib else []),
-        transitive = transitive_depsets,
-    )
-
     args = ctx.actions.args()
     args.use_param_file("@%s", use_always = False)
     args.add("link-binary")
@@ -128,13 +126,23 @@ def kt_js_binary_impl(ctx):
     args.add("--main", ctx.attr.main)
     args.add("--target", ctx.attr.target)
 
+    extra_klibs = []
+    plugin_inputs = []
+    if ctx.attr.compose_enabled:
+        if toolchain.compose_plugin_jar:
+            args.add("--compose-plugin", toolchain.compose_plugin_jar.path)
+            plugin_inputs.append(toolchain.compose_plugin_jar)
+        if hasattr(toolchain, "compose_runtime_klibs") and toolchain.compose_runtime_klibs:
+            extra_klibs.extend(toolchain.compose_runtime_klibs)
+
+    stdlib = toolchain.stdlib_klib
+    all_klibs = depset(
+        direct = direct_klibs + ([stdlib] if stdlib else []) + extra_klibs,
+        transitive = transitive_depsets,
+    )
+
     for klib in all_klibs.to_list():
         args.add("--libraries", klib.path)
-
-    plugin_inputs = []
-    if ctx.attr.compose_enabled and toolchain.compose_plugin_jar:
-        args.add("--compose-plugin", toolchain.compose_plugin_jar.path)
-        plugin_inputs.append(toolchain.compose_plugin_jar)
 
     for opt in ctx.attr.kotlinc_opts:
         args.add("--kotlinc-opts", opt)

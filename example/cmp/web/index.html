@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compose Multiplatform Web Demo</title>
+    <title>Compose Multiplatform Web - Shared Button</title>
     <style>
         body {
             margin: 0;
@@ -17,39 +17,62 @@
             justify-content: center;
             min-height: 80vh;
         }
-        .card {
+        #root {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        .counter-card {
             background: #1e1e1e;
             border-radius: 16px;
-            padding: 32px;
-            max-width: 560px;
+            padding: 36px;
+            max-width: 520px;
+            width: 100%;
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             border: 1px solid #333333;
+            text-align: center;
         }
-        h1 { font-size: 24px; margin-bottom: 8px; color: #bb86fc; }
-        p { color: #aaaaaa; line-height: 1.6; }
-        .badge {
-            display: inline-block;
-            background: #3700b3;
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-right: 6px;
+        .counter-title {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: #bb86fc;
+        }
+        .counter-subtitle {
+            color: #888888;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        .shared-counter-btn {
+            background: #bb86fc;
+            color: #000000;
+            border: none;
+            border-radius: 24px;
+            padding: 14px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(187, 134, 252, 0.35);
+        }
+        .shared-counter-btn:hover {
+            background: #d7b7fd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(187, 134, 252, 0.45);
+        }
+        .shared-counter-btn:active {
+            transform: translateY(0);
+        }
+        .counter-status {
+            color: #aaaaaa;
+            font-size: 14px;
+            margin-top: 18px;
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Compose Multiplatform Web</h1>
-        <div>
-            <span class="badge">Kotlin 2.3.21</span>
-            <span class="badge">Compose 1.9.5</span>
-            <span class="badge">Bazel 8 Bzlmod</span>
-        </div>
-        <p>
-            Compiled via custom supplementary bzlmod rules for Kotlin Multiplatform:
-            <code>kt_js_library</code> &amp; <code>kt_js_binary</code>.
-        </p>
+    <div id="root">
+        <!-- Rendered dynamically by Compose Web Composition -->
     </div>
     <script type="application/javascript" src="web_app.js"></script>
 </body>

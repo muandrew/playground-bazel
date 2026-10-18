@@ -1,3 +1,4 @@
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -6,19 +7,31 @@ package(default_visibility = ["//visibility:public"])
 kt_js_binary(
     name = "web_app",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
-    module_name = "web_app",
+    compose_enabled = True,
     data = ["index.html"],
+    module_name = "web_app",
     deps = [
         "//example/cmp/libb:libb-js",
     ],
 )
 
-# Automated test verifying Web App A logic under Node.js
+# Automated test verifying Web App A shared counter button logic under Node.js
 kt_js_test(
     name = "web_test",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
+    compose_enabled = True,
     module_name = "web_test",
     deps = [
         "//example/cmp/libb:libb-js",
+    ],
+)
+
+# Convenience target to serve web app locally in browser
+sh_binary(
+    name = "serve",
+    srcs = ["serve.sh"],
+    data = [
+        ":web_app",
+        "index.html",
     ],
 )

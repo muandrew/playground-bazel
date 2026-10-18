@@ -10,6 +10,60 @@ bazel_dep(name = "rules_jvm_external", version = "7.1")
 bazel_dep(name = "rules_android", version = "0.8.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
+# Compose Multiplatform JS KLIB dependencies for Web (Compose Runtime 1.9.5)
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "compose_runtime_js",
+    downloaded_file_path = "runtime-js-1.9.5.klib",
+    sha256 = "668e6d2addcb8fdbddf2811f885ef12fd1455ca73c0298a9c4031d4a77a3f47c",
+    urls = ["https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-js/1.9.5/runtime-js-1.9.5.klib"],
+)
+
+http_file(
+    name = "compose_runtime_annotation_js",
+    downloaded_file_path = "runtime-annotation-js-1.9.5.klib",
+    sha256 = "ad86380ca8ccdc9c0a5f3c213be32a167c2a9cffb74251ea1a194ded7046d4e4",
+    urls = ["https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-annotation-js/1.9.5/runtime-annotation-js-1.9.5.klib"],
+)
+
+http_file(
+    name = "compose_annotation_js",
+    downloaded_file_path = "annotation-js-1.9.1.klib",
+    sha256 = "bce021c6476db59d6b82bcb305dafaa8cd6da48a791e7ffb95bd886ae2bfc65f",
+    urls = ["https://dl.google.com/dl/android/maven2/androidx/annotation/annotation-js/1.9.1/annotation-js-1.9.1.klib"],
+)
+
+http_file(
+    name = "compose_collection_js",
+    downloaded_file_path = "collection-js-1.5.0.klib",
+    sha256 = "e73d13acd986d435a87ecff6777f5d004279c03373fcc7dc8ee400ccbd4e7108",
+    urls = ["https://dl.google.com/dl/android/maven2/androidx/collection/collection-js/1.5.0/collection-js-1.5.0.klib"],
+)
+
+http_file(
+    name = "kotlin_dom_api_compat_js",
+    downloaded_file_path = "kotlin-dom-api-compat-2.3.20.klib",
+    sha256 = "6e96e49769048387a048ddbb542765da68d8f4533d3e8f7ddaf10515b2f54134",
+    urls = ["https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-dom-api-compat/2.3.20/kotlin-dom-api-compat-2.3.20.klib"],
+)
+
+http_file(
+    name = "kotlinx_coroutines_core_js",
+    downloaded_file_path = "kotlinx-coroutines-core-js-1.9.0.klib",
+    sha256 = "af0f3d72a1706c326ad328908e2f2e87ad49b0d2c49fa4bba706019e6c26a26a",
+    urls = ["https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-js/1.9.0/kotlinx-coroutines-core-js-1.9.0.klib"],
+)
+
+http_file(
+    name = "atomicfu_js",
+    downloaded_file_path = "atomicfu-js-0.27.0.klib",
+    sha256 = "21f2ee31b98438bb990f749cd03b4ec66d73823758cd56db36b169edde08c805",
+    urls = ["https://repo1.maven.org/maven2/org/jetbrains/kotlinx/atomicfu-js/0.27.0/atomicfu-js-0.27.0.klib"],
+)
+
+
+
 # Configure Kotlin compiler toolchain for Kotlin 2.3.21
 rules_kotlin_extensions = use_extension(
     "@rules_kotlin//src/main/starlark/core/repositories:bzlmod_setup.bzl",

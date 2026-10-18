@@ -10,8 +10,12 @@ kt_android_library(
     custom_package = "com.example.cmp.android",
     kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
     manifest = "AndroidManifest.xml",
+    plugins = [
+        "//prototype/cmp/shared:compose_compiler_plugin",
+    ],
     deps = [
         "//example/cmp/libb:libb-jvm",
+        "@android_maven//:androidx_activity_activity_compose",
         "@android_maven//:androidx_annotation_annotation",
     ],
 )

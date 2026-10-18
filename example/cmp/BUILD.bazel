@@ -17,3 +17,9 @@ alias(
     name = "android",
     actual = "//example/cmp/android:android_app",
 )
+
+# Convenience alias to serve web app locally
+alias(
+    name = "serve",
+    actual = "//example/cmp/web:serve",
+)

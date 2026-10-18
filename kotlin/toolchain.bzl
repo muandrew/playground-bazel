@@ -6,6 +6,7 @@ def _kt_js_toolchain_impl(ctx):
         stdlib_klib = ctx.file.stdlib_klib,
         test_klib = ctx.file.test_klib,
         compose_plugin_jar = ctx.file.compose_plugin_jar,
+        compose_runtime_klibs = ctx.files.compose_runtime_klibs,
         target_version = ctx.attr.target_version,
         runner = ctx.executable._runner,
     )
@@ -33,6 +34,10 @@ kt_js_toolchain = rule(
             mandatory = False,
             allow_single_file = [".jar"],
             doc = "Compose Multiplatform compiler plugin JAR.",
+        ),
+        "compose_runtime_klibs": attr.label_list(
+            allow_files = True,
+            doc = "Compose runtime klibs required when compose_enabled is True.",
         ),
         "target_version": attr.string(
             default = "2.3.21",

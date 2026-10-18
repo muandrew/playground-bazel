@@ -6,10 +6,23 @@ package(default_visibility = ["//visibility:public"])
 # JVM target for Library B (depends on Library C JVM target)
 kt_jvm_library(
     name = "libb-jvm",
-    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    srcs = glob([
+        "src/commonMain/kotlin/**/*.kt",
+        "src/jvmMain/kotlin/**/*.kt",
+    ]),
     kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
+    plugins = [
+        "//prototype/cmp/shared:compose_compiler_plugin",
+    ],
     deps = [
         "//example/cmp/libc:libc-jvm",
+        "@maven//:org_jetbrains_compose_foundation_foundation_desktop",
+        "@maven//:org_jetbrains_compose_foundation_foundation_layout_desktop",
+        "@maven//:org_jetbrains_compose_material3_material3_desktop",
+        "@maven//:org_jetbrains_compose_runtime_runtime_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_graphics_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_unit_desktop",
         "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
     ],
 )
@@ -17,7 +30,11 @@ kt_jvm_library(
 # JS target for Library B (depends on Library C JS target)
 kt_js_library(
     name = "libb-js",
-    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    srcs = glob([
+        "src/commonMain/kotlin/**/*.kt",
+        "src/jsMain/kotlin/**/*.kt",
+    ]),
+    compose_enabled = True,
     module_name = "libb",
     deps = [
         "//example/cmp/libc:libc-js",
