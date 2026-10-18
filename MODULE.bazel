@@ -1,6 +1,6 @@
 module(
-    name = "playground_bazel",
-    version = "1.0.0",
+    name = "rules_kotlin_multiplatform",
+    version = "0.1.0",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
@@ -10,14 +10,19 @@ bazel_dep(name = "rules_jvm_external", version = "7.1")
 bazel_dep(name = "rules_android", version = "0.8.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
-# Configure Kotlin compiler toolchain for Kotlin 2.2.20
+# Configure Kotlin compiler toolchain for Kotlin 2.3.21
 rules_kotlin_extensions = use_extension(
     "@rules_kotlin//src/main/starlark/core/repositories:bzlmod_setup.bzl",
     "rules_kotlin_extensions",
 )
 rules_kotlin_extensions.kotlinc_version(
-    sha256 = "81f0264c9073b5cbbdb3ff8418cf2c5dac076879fc156fa1a6462f5a5acc4420",
-    version = "2.2.20",
+    sha256 = "a8cfc1d62cd4d0de4d04f42575e40135bd620588c17d568a20eb9c7c259af14f",
+    version = "2.3.21",
+)
+use_repo(
+    rules_kotlin_extensions,
+    "com_github_jetbrains_kotlin",
+    "com_github_jetbrains_kotlin_git",
 )
 
 # Maven dependencies for Compose Multiplatform Desktop (JVM) 1.12.x
@@ -40,9 +45,9 @@ maven.install(
         "org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.148.2",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1",
         "org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:2.2.20",
-        "org.jetbrains.kotlin:kotlin-stdlib-common:2.2.20",
-        "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.2.20",
+        "org.jetbrains.kotlin:kotlin-stdlib:2.3.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:2.3.21",
+        "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.3.21",
         "androidx.annotation:annotation:1.9.1",
         "androidx.annotation:annotation-jvm:1.9.1",
         "androidx.collection:collection:1.5.0",
@@ -82,3 +87,9 @@ android_sdk_repository_extension = use_extension(
 use_repo(android_sdk_repository_extension, "androidsdk")
 
 register_toolchains("@androidsdk//:sdk-toolchain", "@androidsdk//:all")
+
+# Kotlin Multiplatform toolchains (JS / Wasm)
+register_toolchains(
+    "//kotlin:default_js_toolchain",
+    "//kotlin:default_wasm_toolchain",
+)

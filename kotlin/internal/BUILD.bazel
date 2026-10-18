@@ -1,0 +1,25 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "runner.py",
+    "providers.bzl",
+    "compile.bzl",
+])
+
+filegroup(
+    name = "runner",
+    srcs = ["runner.py"],
+)
+
+bzl_library(
+    name = "providers_bzl",
+    srcs = ["providers.bzl"],
+)
+
+bzl_library(
+    name = "compile_bzl",
+    srcs = ["compile.bzl"],
+    deps = [":providers_bzl"],
+)

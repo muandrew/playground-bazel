@@ -1,0 +1,24 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Desktop App A (JVM binary target depending on Library B JVM target)
+kt_jvm_binary(
+    name = "desktop_app",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
+    main_class = "com.example.cmp.desktop.MainKt",
+    plugins = [
+        "//prototype/cmp/shared:compose_compiler_plugin",
+    ],
+    deps = [
+        "//example/cmp/libb:libb-jvm",
+        "@maven//:org_jetbrains_compose_foundation_foundation_desktop",
+        "@maven//:org_jetbrains_compose_material3_material3_desktop",
+        "@maven//:org_jetbrains_compose_runtime_runtime_desktop",
+        "@maven//:org_jetbrains_compose_ui_ui_desktop",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_swing",
+        "@maven//:org_jetbrains_skiko_skiko_awt_runtime_macos_arm64",
+        "@maven//:org_jetbrains_skiko_skiko_awt_runtime_macos_x64",
+    ],
+)

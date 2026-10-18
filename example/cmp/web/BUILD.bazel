@@ -1,0 +1,24 @@
+load("//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# Web App A binary (JS / Wasm target depending on Library B JS target)
+kt_js_binary(
+    name = "web_app",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    module_name = "web_app",
+    data = ["index.html"],
+    deps = [
+        "//example/cmp/libb:libb-js",
+    ],
+)
+
+# Automated test verifying Web App A logic under Node.js
+kt_js_test(
+    name = "web_test",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    module_name = "web_test",
+    deps = [
+        "//example/cmp/libb:libb-js",
+    ],
+)

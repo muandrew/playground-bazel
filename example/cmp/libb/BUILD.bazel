@@ -1,0 +1,25 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//kotlin:js.bzl", "kt_js_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# JVM target for Library B (depends on Library C JVM target)
+kt_jvm_library(
+    name = "libb-jvm",
+    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
+    deps = [
+        "//example/cmp/libc:libc-jvm",
+        "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
+    ],
+)
+
+# JS target for Library B (depends on Library C JS target)
+kt_js_library(
+    name = "libb-js",
+    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    module_name = "libb",
+    deps = [
+        "//example/cmp/libc:libc-js",
+    ],
+)

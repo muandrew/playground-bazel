@@ -1,0 +1,19 @@
+package(default_visibility = ["//visibility:public"])
+
+# Convenience alias for the primary web app
+alias(
+    name = "web",
+    actual = "//example/cmp/web:web_app",
+)
+
+# Convenience alias for the desktop app
+alias(
+    name = "desktop",
+    actual = "//example/cmp/desktop:desktop_app",
+)
+
+# Convenience alias for the Android app
+alias(
+    name = "android",
+    actual = "//example/cmp/android:android_app",
+)

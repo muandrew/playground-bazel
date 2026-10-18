@@ -1,0 +1,54 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load(":toolchain.bzl", "kt_js_toolchain", "kt_wasm_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+# Toolchain types
+toolchain_type(name = "js_toolchain_type")
+toolchain_type(name = "wasm_toolchain_type")
+toolchain_type(name = "native_toolchain_type")
+
+# Default Kotlin JS Toolchain using Kotlin 2.3.21 and Compose 1.9.5 compiler plugin
+kt_js_toolchain(
+    name = "default_js_toolchain_impl",
+    compiler_jar = "@com_github_jetbrains_kotlin_git//:lib/kotlin-compiler_jar",
+    compose_plugin_jar = "@com_github_jetbrains_kotlin_git//:lib/compose-compiler-plugin_jar",
+    stdlib_klib = "@com_github_jetbrains_kotlin_git//:lib/kotlin-stdlib-js_klib",
+    target_version = "2.3.21",
+    test_klib = "@com_github_jetbrains_kotlin_git//:lib/kotlin-test-js_klib",
+)
+
+toolchain(
+    name = "default_js_toolchain",
+    toolchain = ":default_js_toolchain_impl",
+    toolchain_type = ":js_toolchain_type",
+)
+
+# Default Kotlin Wasm Toolchain
+kt_wasm_toolchain(
+    name = "default_wasm_toolchain_impl",
+    compiler_jar = "@com_github_jetbrains_kotlin_git//:lib/kotlin-compiler_jar",
+    compose_plugin_jar = "@com_github_jetbrains_kotlin_git//:lib/compose-compiler-plugin_jar",
+    target_version = "2.3.21",
+)
+
+toolchain(
+    name = "default_wasm_toolchain",
+    toolchain = ":default_wasm_toolchain_impl",
+    toolchain_type = ":wasm_toolchain_type",
+)
+
+bzl_library(
+    name = "defs",
+    srcs = [
+        "defs.bzl",
+        "js.bzl",
+        "native.bzl",
+        "toolchain.bzl",
+        "wasm.bzl",
+    ],
+    deps = [
+        "//kotlin/internal:compile_bzl",
+        "//kotlin/internal:providers_bzl",
+    ],
+)

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compose Multiplatform Web Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+        }
+        .card {
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 560px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid #333333;
+        }
+        h1 { font-size: 24px; margin-bottom: 8px; color: #bb86fc; }
+        p { color: #aaaaaa; line-height: 1.6; }
+        .badge {
+            display: inline-block;
+            background: #3700b3;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Compose Multiplatform Web</h1>
+        <div>
+            <span class="badge">Kotlin 2.3.21</span>
+            <span class="badge">Compose 1.9.5</span>
+            <span class="badge">Bazel 8 Bzlmod</span>
+        </div>
+        <p>
+            Compiled via custom supplementary bzlmod rules for Kotlin Multiplatform:
+            <code>kt_js_library</code> &amp; <code>kt_js_binary</code>.
+        </p>
+    </div>
+    <script type="application/javascript" src="web_app.js"></script>
+</body>
+</html>

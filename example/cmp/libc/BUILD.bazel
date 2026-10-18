@@ -1,0 +1,21 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//kotlin:js.bzl", "kt_js_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# JVM target for Library C (used by Android, Desktop JVM)
+kt_jvm_library(
+    name = "libc-jvm",
+    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
+    deps = [
+        "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
+    ],
+)
+
+# JS target for Library C (used by Web / Wasm JS)
+kt_js_library(
+    name = "libc-js",
+    srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
+    module_name = "libc",
+)
