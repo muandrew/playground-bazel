@@ -1,5 +1,5 @@
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("//kotlin:js.bzl", "kt_js_binary")
+load("@kmp_rules//kotlin:js.bzl", "kt_js_binary")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -8,14 +8,7 @@ kt_js_binary(
     srcs = glob(["src/main/kotlin/**/*.kt"]),
     compose_enabled = True,
     module_name = "bs_app",
-    compose_runtime_klibs = ["@compose_bs_js//:klibs"],
-    compose_runtime_assets = [
-        "@compose_bs_js//:skiko_wasm",
-        "@compose_bs_js//:skiko_mjs",
-        "@compose_bs_js//:skiko_reexport",
-        "@compose_bs_js//:node_modules",
-    ],
-    deps = ["//example/bs/shared:shared-js"],
+    deps = ["//shared:shared-js"],
 )
 
 sh_binary(

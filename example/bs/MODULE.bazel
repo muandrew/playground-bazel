@@ -1,0 +1,145 @@
+module(name = "compose_bottom_sheet_example", version = "0.1.0")
+
+# Pull the Kotlin Multiplatform Starlark rules from this repository as a
+# consumer would. This immutable revision predates this standalone example.
+http = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+http(
+    name = "kmp_rules",
+    urls = ["https://github.com/muandrew/playground-bazel/archive/62c77794e99abbe66ba8e0619529c308d1b3e485.tar.gz"],
+    sha256 = "464d15f4e07559c53ec8b84cf261133fb576b35c2a52b31806aa068fc2bcb36b",
+    strip_prefix = "playground-bazel-62c77794e99abbe66ba8e0619529c308d1b3e485",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.9.2")
+# 0.7.1 is compatible with Bazel 9 and with rules_jvm_external's Android
+# repository integration. The 0.8.0 flag repository is not exposed there.
+bazel_dep(name = "rules_android", version = "0.7.1")
+bazel_dep(name = "rules_java", version = "9.9.0")
+bazel_dep(name = "rules_jvm_external", version = "7.1")
+bazel_dep(name = "rules_kotlin", version = "2.4.20")
+bazel_dep(name = "rules_shell", version = "0.8.0")
+
+# Compose 1.12.0 JS/Skiko runtime used both by the fetched default toolchain
+# and this example's JS rules.
+compose_ui_js = use_repo_rule("//:compose_1_12_repositories.bzl", "compose_ui_js")
+compose_ui_js(name = "compose_ui_js")
+
+# Kotlin 2.4.21 is the latest stable release in the 2.4.x line.
+rules_kotlin_extensions = use_extension(
+    "@rules_kotlin//src/main/starlark/core/repositories:bzlmod_setup.bzl",
+    "rules_kotlin_extensions",
+)
+rules_kotlin_extensions.kotlinc_version(
+    version = "2.4.21",
+    sha256 = "7cc140e76daf416a0424a5557f99afd7ca89ebd463ea1101261e3e01c33e75cd",
+)
+use_repo(
+    rules_kotlin_extensions,
+    "btapi_impl",
+    "com_github_google_ksp",
+    "com_github_jetbrains_kotlin",
+    "com_github_jetbrains_kotlin_git",
+    "com_github_pinterest_ktlint",
+    "kotlin_build_tools_api",
+    "kotlinx_coroutines_core_jvm",
+    "kotlinx_serialization_core_jvm",
+    "kotlinx_serialization_json",
+    "kotlinx_serialization_json_jvm",
+)
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "maven",
+    artifacts = [
+        "org.jetbrains.compose.runtime:runtime-desktop:1.12.0",
+        "org.jetbrains.compose.foundation:foundation-desktop:1.12.0",
+        "org.jetbrains.compose.foundation:foundation-layout-desktop:1.12.0",
+        "org.jetbrains.compose.material3:material3-desktop:1.12.0-alpha03",
+        "org.jetbrains.compose.ui:ui-desktop:1.12.0",
+        "org.jetbrains.compose.ui:ui-graphics-desktop:1.12.0",
+        "org.jetbrains.compose.ui:ui-text-desktop:1.12.0",
+        "org.jetbrains.compose.ui:ui-unit-desktop:1.12.0",
+        "org.jetbrains.compose.animation:animation-desktop:1.12.0",
+        "org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.150.1",
+        "org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.150.1",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.1",
+        "org.jetbrains.kotlin:kotlin-stdlib:2.4.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:2.4.21",
+        "org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:2.4.21",
+        "androidx.annotation:annotation:1.9.1",
+        "androidx.annotation:annotation-jvm:1.9.1",
+        "androidx.collection:collection:1.5.0",
+        "androidx.collection:collection-jvm:1.5.0",
+        "androidx.lifecycle:lifecycle-common:2.8.5",
+        "androidx.lifecycle:lifecycle-common-jvm:2.8.5",
+    ],
+    known_contributing_modules = ["protobuf"],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://maven.google.com",
+        "https://maven.pkg.jetbrains.space/public/p/compose/dev",
+    ],
+)
+use_repo(maven, "maven")
+
+maven.install(
+    name = "android_maven",
+    aar_import_bzl_label = "@rules_android//rules:rules.bzl",
+    artifacts = [
+        "org.jetbrains.compose.animation:animation-android:1.12.0",
+        "org.jetbrains.compose.foundation:foundation-android:1.12.0",
+        "org.jetbrains.compose.foundation:foundation-layout-android:1.12.0",
+        "org.jetbrains.compose.material3:material3-android:1.12.0-alpha03",
+        "org.jetbrains.compose.runtime:runtime-android:1.12.0",
+        "org.jetbrains.compose.runtime:runtime-saveable-android:1.12.0",
+        "org.jetbrains.compose.ui:ui-android:1.12.0",
+        "org.jetbrains.compose.ui:ui-graphics-android:1.12.0",
+        "org.jetbrains.compose.ui:ui-text-android:1.12.0",
+        "org.jetbrains.compose.ui:ui-unit-android:1.12.0",
+        "androidx.activity:activity-compose:1.8.2",
+        "androidx.activity:activity:1.8.2",
+        "androidx.activity:activity-ktx:1.8.2",
+        "androidx.annotation:annotation:1.9.1",
+        "androidx.compose.ui:ui:1.12.0",
+        "androidx.compose.ui:ui-graphics:1.12.0",
+        "androidx.compose.ui:ui-text:1.12.0",
+        "androidx.compose.ui:ui-unit:1.12.0",
+        "androidx.compose.runtime:runtime:1.12.0",
+        "androidx.compose.runtime:runtime-saveable:1.12.0",
+        "androidx.savedstate:savedstate:1.4.0",
+        "androidx.savedstate:savedstate-compose:1.4.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://maven.google.com",
+        "https://maven.pkg.jetbrains.space/public/p/compose/dev",
+    ],
+    use_starlark_android_rules = True,
+)
+maven.artifact(name = "android_maven", group = "androidx.activity", artifact = "activity", version = "1.8.2", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.activity", artifact = "activity-ktx", version = "1.8.2", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.collection", artifact = "collection-jvm", version = "1.5.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.compose.runtime", artifact = "runtime", version = "1.12.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.compose.runtime", artifact = "runtime-saveable", version = "1.12.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.compose.ui", artifact = "ui", version = "1.12.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.compose.ui", artifact = "ui-graphics", version = "1.12.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.compose.ui", artifact = "ui-text", version = "1.12.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.compose.ui", artifact = "ui-unit", version = "1.12.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.savedstate", artifact = "savedstate", version = "1.4.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.savedstate", artifact = "savedstate-compose", version = "1.4.0", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.lifecycle", artifact = "lifecycle-common", version = "2.9.4", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.lifecycle", artifact = "lifecycle-runtime", version = "2.9.4", force_version = True)
+maven.artifact(name = "android_maven", group = "androidx.lifecycle", artifact = "lifecycle-viewmodel", version = "2.9.4", force_version = True)
+use_repo(maven, "android_maven")
+
+android_sdk_repository_extension = use_extension(
+    "@rules_android//rules/android_sdk_repository:rule.bzl",
+    "android_sdk_repository_extension",
+)
+use_repo(android_sdk_repository_extension, "androidsdk")
+register_toolchains("@androidsdk//:sdk-toolchain", "@androidsdk//:all")
+register_toolchains(
+    "@kmp_rules//kotlin:default_js_toolchain",
+    "@kmp_rules//kotlin:default_wasm_toolchain",
+)
