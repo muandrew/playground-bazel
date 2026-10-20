@@ -1,11 +1,12 @@
 # Compose Multiplatform web example
 
 This example renders the shared Material 3 counter button onto a canvas using
-Compose Multiplatform 1.9.3, Material 3 1.9.0, and Bazel 8.4.2. Kotlin/JS runs the
+Compose Multiplatform 1.9.3 and Material 3 1.9.0 on Bazel 8 or 9. Kotlin/JS runs the
 application; Skiko 0.9.22.2 supplies the WebAssembly graphics runtime. The Kotlin
 compiler is 2.3.21. This example uses the Kotlin/JS canvas target.
 
-Use Bazelisk to select the Bazel version pinned in `.bazelversion`. Building and
+Use Bazelisk to select Bazel 9, pinned in `.bazelversion`. To use Bazel 8.4.2,
+prefix commands with `USE_BAZEL_VERSION=8.4.2`. Building and
 serving require JDK 17 or later (`java`) and Python 3 on your PATH. Node.js is
 also required for the state test below. No Gradle or npm install is needed.
 

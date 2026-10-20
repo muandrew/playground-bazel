@@ -1,0 +1,31 @@
+package(default_visibility = ["//visibility:public"])
+
+alias(
+    name = "web",
+    actual = "//example/bs/web:web_app",
+)
+
+alias(
+    name = "desktop",
+    actual = "//example/bs/desktop:desktop_app",
+)
+
+alias(
+    name = "android",
+    actual = "//example/bs/android:android_app",
+)
+
+alias(
+    name = "serve",
+    actual = "//example/bs/web:serve",
+)
+
+alias(
+    name = "test",
+    actual = ":web_test",
+)
+
+test_suite(
+    name = "web_test",
+    tests = ["//example/bs/shared:sheet_state_test"],
+)

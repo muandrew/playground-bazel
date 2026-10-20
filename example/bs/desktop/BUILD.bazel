@@ -1,0 +1,21 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_jvm_binary(
+    name = "desktop_app",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    main_class = "com.example.sheet.desktop.MainKt",
+    kotlinc_opts = "//example/bs/shared:kt_kotlinc_options",
+    plugins = ["//example/bs/shared:compose_compiler_plugin"],
+    deps = [
+        "//example/bs/shared:shared-jvm",
+        "@bs_maven//:org_jetbrains_compose_foundation_foundation_desktop",
+        "@bs_maven//:org_jetbrains_compose_material3_material3_desktop",
+        "@bs_maven//:org_jetbrains_compose_runtime_runtime_desktop",
+        "@bs_maven//:org_jetbrains_compose_ui_ui_desktop",
+        "@bs_maven//:org_jetbrains_kotlinx_kotlinx_coroutines_swing",
+        "@bs_maven//:org_jetbrains_skiko_skiko_awt_runtime_macos_arm64",
+        "@bs_maven//:org_jetbrains_skiko_skiko_awt_runtime_macos_x64",
+    ],
+)

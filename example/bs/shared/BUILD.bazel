@@ -1,0 +1,88 @@
+load("@rules_kotlin//kotlin:core.bzl", "kt_compiler_plugin", "kt_kotlinc_options")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+load("//kotlin:js.bzl", "kt_js_library", "kt_js_test")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_kotlinc_options(
+    name = "kt_kotlinc_options",
+    api_version = "2.3",
+    language_version = "2.3",
+    jvm_target = "17",
+)
+
+kt_compiler_plugin(
+    name = "compose_compiler_plugin",
+    id = "androidx.compose.compiler.plugins.kotlin",
+    target_embedded_compiler = True,
+    deps = ["@bs_maven//:org_jetbrains_kotlin_kotlin_compose_compiler_plugin_embeddable"],
+)
+
+kt_jvm_library(
+    name = "shared-jvm",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    kotlinc_opts = ":kt_kotlinc_options",
+    plugins = [":compose_compiler_plugin"],
+    deps = [
+        "@bs_maven//:org_jetbrains_compose_animation_animation_desktop",
+        "@bs_maven//:org_jetbrains_compose_foundation_foundation_desktop",
+        "@bs_maven//:org_jetbrains_compose_foundation_foundation_layout_desktop",
+        "@bs_maven//:org_jetbrains_compose_material3_material3_desktop",
+        "@bs_maven//:org_jetbrains_compose_runtime_runtime_desktop",
+        "@bs_maven//:org_jetbrains_compose_ui_ui_desktop",
+        "@bs_maven//:org_jetbrains_compose_ui_ui_graphics_desktop",
+        "@bs_maven//:org_jetbrains_compose_ui_ui_text_desktop",
+        "@bs_maven//:org_jetbrains_compose_ui_ui_unit_desktop",
+        "@bs_maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+    ],
+)
+
+# Android consumes the shared source files against Android Compose AARs. Keep
+# this separate from the desktop JVM target so no desktop runtime jars leak into
+# the APK's compile or runtime graph.
+kt_android_library(
+    name = "shared-android",
+    srcs = glob(["src/main/kotlin/**/*.kt"]),
+    custom_package = "com.example.sheet",
+    kotlinc_opts = ":kt_kotlinc_options",
+    plugins = [":compose_compiler_plugin"],
+    deps = [
+        "@bs_android_maven//:org_jetbrains_compose_animation_animation_android",
+        "@bs_android_maven//:org_jetbrains_compose_foundation_foundation_android",
+        "@bs_android_maven//:org_jetbrains_compose_foundation_foundation_layout_android",
+        "@bs_android_maven//:org_jetbrains_compose_material3_material3_android",
+        "@bs_android_maven//:org_jetbrains_compose_runtime_runtime_android",
+        "@bs_android_maven//:org_jetbrains_compose_runtime_runtime_saveable_android",
+        "@bs_android_maven//:org_jetbrains_compose_ui_ui_android",
+        "@bs_android_maven//:org_jetbrains_compose_ui_ui_graphics_android",
+        "@bs_android_maven//:org_jetbrains_compose_ui_ui_text_android",
+        "@bs_android_maven//:org_jetbrains_compose_ui_ui_unit_android",
+    ],
+)
+
+kt_js_library(
+    name = "shared-js",
+    srcs = glob([
+        "src/main/kotlin/**/*.kt",
+        "src/jsMain/kotlin/**/*.kt",
+    ]),
+    compose_enabled = True,
+    module_name = "bs_shared",
+    compose_runtime_klibs = ["@compose_bs_js//:klibs"],
+    deps = [],
+)
+
+kt_js_test(
+    name = "sheet_state_test",
+    srcs = glob(["src/test/kotlin/**/*.kt"]),
+    compose_enabled = True,
+    compose_runtime_klibs = ["@compose_bs_js//:klibs"],
+    compose_runtime_assets = [
+        "@compose_bs_js//:skiko_wasm",
+        "@compose_bs_js//:skiko_mjs",
+        "@compose_bs_js//:skiko_reexport",
+        "@compose_bs_js//:node_modules",
+    ],
+    deps = [":shared-js"],
+)

@@ -2,6 +2,22 @@
 
 load(":providers.bzl", "KtJsInfo", "KtNativeInfo", "KtWasmInfo")
 
+def _compose_runtime_klibs(ctx, toolchain):
+    """Select target runtime overrides, falling back to JS toolchain defaults."""
+    if hasattr(ctx.attr, "compose_runtime_klibs") and ctx.attr.compose_runtime_klibs:
+        return ctx.files.compose_runtime_klibs
+    if hasattr(toolchain, "compose_runtime_klibs"):
+        return toolchain.compose_runtime_klibs
+    return []
+
+def _compose_runtime_assets(ctx, toolchain):
+    """Select target runtime assets, falling back to JS toolchain defaults."""
+    if hasattr(ctx.attr, "compose_runtime_assets") and ctx.attr.compose_runtime_assets:
+        return ctx.files.compose_runtime_assets
+    if hasattr(toolchain, "compose_runtime_assets"):
+        return toolchain.compose_runtime_assets
+    return []
+
 def _kt_compile_klib_action(
         ctx,
         toolchain,
@@ -37,8 +53,7 @@ def _kt_compile_klib_action(
         if toolchain.compose_plugin_jar:
             args.add("--compose-plugin", toolchain.compose_plugin_jar.path)
             plugin_inputs.append(toolchain.compose_plugin_jar)
-        if hasattr(toolchain, "compose_runtime_klibs") and toolchain.compose_runtime_klibs:
-            extra_klibs.extend(toolchain.compose_runtime_klibs)
+        extra_klibs.extend(_compose_runtime_klibs(ctx, toolchain))
 
     # Toolchain stdlib klib + compose runtime klibs
     stdlib = toolchain.stdlib_klib
@@ -134,10 +149,8 @@ def kt_js_binary_impl(ctx):
         if toolchain.compose_plugin_jar:
             args.add("--compose-plugin", toolchain.compose_plugin_jar.path)
             plugin_inputs.append(toolchain.compose_plugin_jar)
-        if hasattr(toolchain, "compose_runtime_klibs") and toolchain.compose_runtime_klibs:
-            extra_klibs.extend(toolchain.compose_runtime_klibs)
-        if hasattr(toolchain, "compose_runtime_assets") and toolchain.compose_runtime_assets:
-            extra_assets.extend(toolchain.compose_runtime_assets)
+        extra_klibs.extend(_compose_runtime_klibs(ctx, toolchain))
+        extra_assets.extend(_compose_runtime_assets(ctx, toolchain))
 
     stdlib = toolchain.stdlib_klib
     all_klibs = depset(

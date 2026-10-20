@@ -20,6 +20,10 @@ kt_js_library = rule(
             default = False,
             doc = "Whether to enable Compose Multiplatform compiler plugin.",
         ),
+        "compose_runtime_klibs": attr.label_list(
+            allow_files = True,
+            doc = "Compose runtime klibs overriding the JS toolchain defaults.",
+        ),
         "kotlinc_opts": attr.string_list(
             doc = "Extra kotlinc compiler options.",
         ),
@@ -56,6 +60,14 @@ kt_js_binary = rule(
             default = False,
             doc = "Whether to enable Compose Multiplatform compiler plugin.",
         ),
+        "compose_runtime_klibs": attr.label_list(
+            allow_files = True,
+            doc = "Compose runtime klibs overriding the JS toolchain defaults.",
+        ),
+        "compose_runtime_assets": attr.label_list(
+            allow_files = True,
+            doc = "Compose runtime assets overriding the JS toolchain defaults.",
+        ),
         "kotlinc_opts": attr.string_list(
             doc = "Extra kotlinc compiler options.",
         ),
@@ -87,6 +99,12 @@ kt_js_test = rule(
         ),
         "compose_enabled": attr.bool(
             default = False,
+        ),
+        "compose_runtime_klibs": attr.label_list(
+            allow_files = True,
+        ),
+        "compose_runtime_assets": attr.label_list(
+            allow_files = True,
         ),
         "kotlinc_opts": attr.string_list(),
         "data": attr.label_list(
