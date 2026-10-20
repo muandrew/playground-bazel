@@ -1,6 +1,5 @@
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("@rules_shell//shell:sh_test.bzl", "sh_test")
-load("//kotlin:js.bzl", "kt_js_binary")
+load("//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -9,22 +8,24 @@ kt_js_binary(
     name = "web_app",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
     compose_enabled = True,
-    data = [
-        "index.html",
-        "@compose_ui_js//:skiko_mjs",
-        "@compose_ui_js//:skiko_wasm",
-    ],
     module_name = "web_app",
     deps = [
         "//example/cmp/libb:libb-js",
     ],
 )
 
-# Automated test verifying Web App A logic under Node.js
-sh_test(
+# Runs shared state assertions in Node.js. Browser rendering is checked separately.
+kt_js_test(
+    name = "counter_state_test",
+    srcs = glob(["src/test/kotlin/**/*.kt"]),
+    compose_enabled = True,
+    deps = ["//example/cmp/libb:libb-js"],
+)
+
+# Preserve the original test label while making its scope explicit above.
+test_suite(
     name = "web_test",
-    srcs = ["test.sh"],
-    data = [":web_app"],
+    tests = [":counter_state_test"],
 )
 
 # Convenience target to serve web app locally in browser
@@ -34,7 +35,5 @@ sh_binary(
     data = [
         ":web_app",
         "index.html",
-        "@compose_ui_js//:skiko_mjs",
-        "@compose_ui_js//:skiko_wasm",
     ],
 )

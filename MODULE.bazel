@@ -7,15 +7,15 @@ bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_kotlin", version = "2.4.20")
 bazel_dep(name = "rules_jvm_external", version = "7.1")
-bazel_dep(name = "rules_android", version = "0.8.0")
+
+# rules_android 0.8.0 uses MODULE flag_alias(), which requires Bazel 9.
+bazel_dep(name = "rules_android", version = "0.7.1")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
 # Compose Multiplatform JS Canvas/Skiko KLIB repository
 compose_ui_js = use_repo_rule("//kotlin:repositories.bzl", "compose_ui_js")
+
 compose_ui_js(name = "compose_ui_js")
-
-
-
 
 # Configure Kotlin compiler toolchain for Kotlin 2.3.21
 rules_kotlin_extensions = use_extension(
@@ -28,28 +28,36 @@ rules_kotlin_extensions.kotlinc_version(
 )
 use_repo(
     rules_kotlin_extensions,
+    "btapi_impl",
+    "com_github_google_ksp",
     "com_github_jetbrains_kotlin",
     "com_github_jetbrains_kotlin_git",
+    "com_github_pinterest_ktlint",
+    "kotlin_build_tools_api",
+    "kotlinx_coroutines_core_jvm",
+    "kotlinx_serialization_core_jvm",
+    "kotlinx_serialization_json",
+    "kotlinx_serialization_json_jvm",
 )
 
-# Maven dependencies for Compose Multiplatform Desktop (JVM) 1.12.x
+# Compose 1.9.3 uses Material3 1.9.0 and Skiko 0.9.22.2 on both JS and JVM.
+# Maven dependencies for Compose Multiplatform Desktop (JVM) 1.9.x
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     name = "maven",
-    known_contributing_modules = ["protobuf"],
     artifacts = [
-        "org.jetbrains.compose.runtime:runtime-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.foundation:foundation-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.foundation:foundation-layout-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.material3:material3-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.ui:ui-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.ui:ui-graphics-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.ui:ui-text-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.ui:ui-unit-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.animation:animation-desktop:1.12.0-alpha02",
-        "org.jetbrains.compose.components:components-resources-desktop:1.12.0-alpha02",
-        "org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.148.2",
-        "org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.148.2",
+        "org.jetbrains.compose.runtime:runtime-desktop:1.9.3",
+        "org.jetbrains.compose.foundation:foundation-desktop:1.9.3",
+        "org.jetbrains.compose.foundation:foundation-layout-desktop:1.9.3",
+        "org.jetbrains.compose.material3:material3-desktop:1.9.0",
+        "org.jetbrains.compose.ui:ui-desktop:1.9.3",
+        "org.jetbrains.compose.ui:ui-graphics-desktop:1.9.3",
+        "org.jetbrains.compose.ui:ui-text-desktop:1.9.3",
+        "org.jetbrains.compose.ui:ui-unit-desktop:1.9.3",
+        "org.jetbrains.compose.animation:animation-desktop:1.9.3",
+        "org.jetbrains.compose.components:components-resources-desktop:1.9.3",
+        "org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:0.9.22.2",
+        "org.jetbrains.skiko:skiko-awt-runtime-macos-x64:0.9.22.2",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1",
         "org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.10.1",
         "org.jetbrains.kotlin:kotlin-stdlib:2.3.21",
@@ -62,6 +70,7 @@ maven.install(
         "androidx.lifecycle:lifecycle-common:2.8.5",
         "androidx.lifecycle:lifecycle-common-jvm:2.8.5",
     ],
+    known_contributing_modules = ["protobuf"],
     repositories = [
         "https://repo1.maven.org/maven2",
         "https://maven.google.com",

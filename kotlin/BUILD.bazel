@@ -8,7 +8,7 @@ toolchain_type(name = "js_toolchain_type")
 toolchain_type(name = "wasm_toolchain_type")
 toolchain_type(name = "native_toolchain_type")
 
-# Default Kotlin JS Toolchain using Kotlin 2.3.21 and Compose 1.9.5 compiler plugin
+# Default Kotlin JS toolchain; the Compose compiler plugin matches Kotlin 2.3.21.
 kt_js_toolchain(
     name = "default_js_toolchain_impl",
     compiler_jar = "@com_github_jetbrains_kotlin_git//:lib/kotlin-compiler_jar",

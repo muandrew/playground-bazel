@@ -4,6 +4,7 @@
 import argparse
 import os
 import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -42,8 +43,10 @@ def run_kotlinc(compiler_jar, kotlinc_args):
         if proc.stderr:
             sys.stderr.write(proc.stderr)
         sys.exit(proc.returncode)
-    elif proc.stdout:
+    if proc.stdout:
         sys.stdout.write(proc.stdout)
+    if proc.stderr:
+        sys.stderr.write(proc.stderr)
 
 
 def compile_klib(args):
@@ -116,9 +119,13 @@ def link_binary(args):
             "-ir-output-dir", link_dir,
             "-target", args.target,
             "-main", args.main,
+            # Reject broken dependency graphs before emitting browser-time errors.
+            "-Xpartial-linkage-loglevel=error",
         ]
         if args.backend == "wasm":
             link_args.append("-Xwasm")
+        else:
+            link_args.extend(["-module-kind", "es"])
         if main_klib:
             link_args.append(f"-Xinclude={main_klib}")
         if libs:
@@ -136,54 +143,25 @@ def link_binary(args):
                 generated_js = p
                 break
         if not generated_js:
-            files = [f for f in os.listdir(link_dir) if f.endswith(".js") or f.endswith(".mjs")]
-            if files:
-                generated_js = os.path.join(link_dir, files[0])
-            else:
-                sys.stderr.write(f"Error: Expected JS/MJS output was not generated in {link_dir}\n")
-                sys.exit(1)
+            sys.stderr.write(f"Error: Expected {args.module_name}.js or .mjs was not generated in {link_dir}\n")
+            sys.exit(1)
 
         output_js_path = os.path.abspath(args.output_js)
         out_dir = os.path.dirname(output_js_path)
         os.makedirs(out_dir, exist_ok=True)
         shutil.copy2(generated_js, output_js_path)
-        # Fix known binary compatibility / IR linkage issues for web target if present
-        with open(output_js_path, "r", encoding="utf-8") as f:
-            code = f.read()
-
-        bad_linkage = 'throwIrLinkageError("Function \'addEventListener\' can not be called: No function found for symbol \'org.w3c.dom/HTMLTextAreaElement.addEventListener|addEventListener(kotlin.String;kotlin.Function1<org.w3c.dom.events.Event,kotlin.Unit>?){}[0]\'");'
-        if bad_linkage in code:
-            code = code.replace(bad_linkage, 'clipTarget.addEventListener("copy", clipEventListener);')
-            with open(output_js_path, "w", encoding="utf-8") as f:
-                f.write(code)
-
-        # Also copy as .mjs next to output_js if Node requires ES module extension
-        mjs_sibling = os.path.splitext(output_js_path)[0] + ".mjs"
-        shutil.copy2(output_js_path, mjs_sibling)
-
-        # Copy any sibling .wasm, .mjs, .map files produced in link_dir
-        for f in os.listdir(link_dir):
-            src_f = os.path.join(link_dir, f)
-            if os.path.isfile(src_f) and f.endswith((".wasm", ".mjs", ".map")):
-                dest_f = os.path.join(out_dir, f)
-                if not os.path.exists(dest_f):
-                    shutil.copy2(src_f, dest_f)
-
-        # Copy companion runtime assets like skiko.mjs and skiko.wasm from library roots
-        dest_nm = os.path.join(out_dir, "node_modules")
-        os.makedirs(dest_nm, exist_ok=True)
-        for lib in libs:
-            lib_dir = os.path.dirname(os.path.realpath(lib))
-            for asset in ["skiko.mjs", "skiko.wasm", "js-reexport-symbols.mjs"]:
-                asset_p = os.path.join(lib_dir, asset)
-                if os.path.exists(asset_p):
-                    dest_asset = os.path.join(out_dir, asset)
-                    if not os.path.exists(dest_asset):
-                        shutil.copy2(asset_p, dest_asset)
-            nm_p = os.path.join(lib_dir, "node_modules")
-            if os.path.isdir(nm_p):
-                shutil.copytree(nm_p, dest_nm, dirs_exist_ok=True)
-
+        launcher_js_path = output_js_path
+        # Preserve the existing Wasm companion layout; the explicit JS output
+        # and runtime handling above are independent of Wasm's generated glue.
+        if args.backend == "wasm":
+            launcher_js_path = os.path.splitext(output_js_path)[0] + ".mjs"
+            shutil.copy2(output_js_path, launcher_js_path)
+            for name in os.listdir(link_dir):
+                source = os.path.join(link_dir, name)
+                destination = os.path.join(out_dir, name)
+                if os.path.isfile(source) and name.endswith((".wasm", ".mjs", ".map")):
+                    if not os.path.exists(destination):
+                        shutil.copy2(source, destination)
         if args.output_wasm:
             generated_wasm = os.path.join(link_dir, f"{args.module_name}.wasm")
             if os.path.exists(generated_wasm):
@@ -194,12 +172,68 @@ def link_binary(args):
         if args.output_executable:
             output_exec_path = os.path.abspath(args.output_executable)
             os.makedirs(os.path.dirname(output_exec_path), exist_ok=True)
-            js_name = os.path.basename(output_js_path)
-            mjs_name = os.path.basename(mjs_sibling)
-            wrapper_code = r"""
+            relative_js = os.path.relpath(launcher_js_path, os.path.dirname(output_exec_path))
+            launcher_content = node_launcher(relative_js, args.runfile_js)
+            with open(output_exec_path, "w") as f:
+                f.write(launcher_content)
+            os.chmod(output_exec_path, 0o755)
+
+    finally:
+        shutil.rmtree(entry_dir, ignore_errors=True)
+        shutil.rmtree(link_dir, ignore_errors=True)
+
+
+def node_launcher(relative_js, runfile_js):
+    """Resolve only this target's module, including manifest-only runfiles."""
+    return r"""#!/usr/bin/env bash
+set -euo pipefail
+DIR="$(cd "$(dirname "$0")" && pwd)"
+RELATIVE_JS=__RELATIVE_JS__
+RUNFILE_JS=__RUNFILE_JS__
+TARGET_JS="$DIR/$RELATIVE_JS"
+if [[ ! -f "$TARGET_JS" ]]; then
+    TARGET_JS=""
+    for runfiles_root in "${RUNFILES_DIR:-}" "${TEST_SRCDIR:-}" "$0.runfiles"; do
+        if [[ -n "$runfiles_root" && -f "$runfiles_root/$RUNFILE_JS" ]]; then
+            TARGET_JS="$runfiles_root/$RUNFILE_JS"
+            break
+        fi
+    done
+fi
+if [[ ! -f "$TARGET_JS" ]]; then
+    manifest="${RUNFILES_MANIFEST_FILE:-$0.runfiles_manifest}"
+    if [[ -f "$manifest" && -n "$RUNFILE_JS" ]]; then
+        while IFS= read -r line; do
+            if [[ "$line" == "$RUNFILE_JS "* ]]; then
+                TARGET_JS="${line#"$RUNFILE_JS "}"
+                break
+            fi
+        done < "$manifest"
+    fi
+fi
+if [[ ! -f "$TARGET_JS" ]]; then
+    echo "Kotlin JS module not found in runfiles: $RUNFILE_JS" >&2
+    exit 1
+fi
+NODE_BIN="${NODE_BINARY:-}"
+if [[ -z "$NODE_BIN" ]]; then
+    # Bazel may restrict PATH for tests, including on Homebrew installations.
+    for candidate in node /opt/homebrew/bin/node /usr/local/bin/node; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            NODE_BIN="$(command -v "$candidate")"
+            break
+        fi
+    done
+fi
+if [[ -z "$NODE_BIN" ]] || ! command -v "$NODE_BIN" >/dev/null 2>&1; then
+    echo "Node.js is required to run this Kotlin JS target; install Node.js or set NODE_BINARY." >&2
+    exit 127
+fi
+exec "$NODE_BIN" --input-type=module - "$TARGET_JS" "$@" <<'KOTLIN_NODE_WRAPPER'
 import fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+// Skiko's JS runtime also supports model tests under Node.
 if (typeof globalThis.window === 'undefined') {
   globalThis.window = globalThis;
 }
@@ -210,7 +244,8 @@ if (typeof globalThis.XMLHttpRequest === 'undefined') {
       setTimeout(() => {
         try {
           const p = this.url.startsWith('file://') ? fileURLToPath(this.url) : this.url;
-          this.response = fs.readFileSync(p).buffer;
+          const bytes = fs.readFileSync(p);
+          this.response = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
           this.status = 200;
           if (this.onload) this.onload();
         } catch (e) {
@@ -220,56 +255,13 @@ if (typeof globalThis.XMLHttpRequest === 'undefined') {
     }
   };
 }
-
 const targetPath = process.argv[2];
+process.argv = [process.execPath, targetPath, ...process.argv.slice(3)];
 await import(pathToFileURL(targetPath).href);
-""".strip()
-
-            launcher_content = f"""#!/usr/bin/env bash
-set -euo pipefail
-DIR="$(cd "$(dirname "$0")" && pwd)"
-TARGET_JS=""
-for cand in "$DIR/{mjs_name}" "$DIR/{js_name}"; do
-    if [ -f "$cand" ]; then
-        TARGET_JS="$cand"
-        break
-    fi
-done
-if [ -z "$TARGET_JS" ] && [ -n "${{RUNFILES_DIR:-}}" ]; then
-    TARGET_JS="$(find "$RUNFILES_DIR" -name "{mjs_name}" -o -name "{js_name}" 2>/dev/null | head -n 1 || true)"
-fi
-if [ -z "$TARGET_JS" ]; then
-    TARGET_JS="{output_js_path}"
-fi
-
-NODE_BIN=""
-for cand_node in node /opt/homebrew/bin/node /usr/local/bin/node; do
-    if command -v "$cand_node" >/dev/null 2>&1; then
-        NODE_BIN="$(command -v "$cand_node")"
-        break
-    fi
-done
-
-if [ -n "$NODE_BIN" ]; then
-    NODE_TMP_DIR="$(mktemp -d "${{TMPDIR:-/tmp}}/node_launcher_XXXXXX")"
-    NODE_WRAPPER="$NODE_TMP_DIR/launcher.mjs"
-    trap 'rm -rf "$NODE_TMP_DIR"' EXIT
-    cat << 'EOF' > "$NODE_WRAPPER"
-{wrapper_code}
-EOF
-    exec "$NODE_BIN" "$NODE_WRAPPER" "$TARGET_JS" "$@"
-else
-    echo "Warning: node command not found in PATH" >&2
-    exit 0
-fi
-"""
-            with open(output_exec_path, "w") as f:
-                f.write(launcher_content)
-            os.chmod(output_exec_path, 0o755)
-
-    finally:
-        shutil.rmtree(entry_dir, ignore_errors=True)
-        shutil.rmtree(link_dir, ignore_errors=True)
+KOTLIN_NODE_WRAPPER
+""".replace("__RELATIVE_JS__", shlex.quote(relative_js)).replace(
+        "__RUNFILE_JS__", shlex.quote(runfile_js or "")
+    )
 
 
 def main():
@@ -290,8 +282,9 @@ def main():
     compile_p.add_argument("--srcs", nargs="*", default=[])
 
     link_p = subparsers.add_parser("link-binary")
-    link_p.add_argument("--output-js", required=True, help="Path to output .js")
+    link_p.add_argument("--output-js", required=True, help="Path to output JavaScript module")
     link_p.add_argument("--output-executable", help="Path to output executable launcher script")
+    link_p.add_argument("--runfile-js", help="Logical runfiles path of the JavaScript module")
     link_p.add_argument("--output-wasm", help="Path to output .wasm (for wasm backend)")
     link_p.add_argument("--module-name", required=True, help="Module name")
     link_p.add_argument("--compiler-jar", required=True, help="Path to kotlin-compiler.jar")

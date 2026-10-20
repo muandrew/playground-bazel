@@ -2,61 +2,63 @@
 set -euo pipefail
 
 PORT="${1:-8085}"
-DIR=""
+if ! [[ "$PORT" =~ ^[0-9]{1,5}$ ]] || (( 10#$PORT < 1 || 10#$PORT > 65535 )); then
+    echo "Usage: bazel run //example/cmp/web:serve -- [port: 1-65535]" >&2
+    exit 1
+fi
+PORT="$((10#$PORT))"
 
-# Locate the web assets directory (runfiles or bazel-bin)
-for candidate in \
-    "${RUNFILES_DIR:-}/_main/example/cmp/web" \
-    "${RUNFILES_DIR:-}/example/cmp/web" \
-    "${0}.runfiles/_main/example/cmp/web" \
-    "${0}.runfiles/example/cmp/web"; do
-    if [ -f "${candidate}/index.html" ] && [ -f "${candidate}/web_app.js" ]; then
-        DIR="${candidate}"
-        break
+rlocation() {
+    local relative="$1" candidate
+    for candidate in \
+        "${RUNFILES_DIR:-}/$relative" \
+        "${TEST_SRCDIR:-}/$relative" \
+        "${0}.runfiles/$relative"; do
+        if [ -e "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return
+        fi
+    done
+    local manifest="${RUNFILES_MANIFEST_FILE:-${0}.runfiles_manifest}"
+    if [ -f "$manifest" ]; then
+        candidate="$(awk -v key="$relative" '$1 == key {sub(/^[^ ]+ /, ""); print; exit}' "$manifest")"
+        if [ -n "$candidate" ] && [ -e "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return
+        fi
+    fi
+    echo "Missing runfile: $relative. Run this server with bazel run //example/cmp/web:serve." >&2
+    return 1
+}
+
+INDEX="$(rlocation _main/example/cmp/web/index.html)"
+APP="$(rlocation _main/example/cmp/web/web_app_files/web_app.mjs)"
+ASSETS="$(dirname "$APP")"
+for asset in skiko.mjs skiko.wasm js-reexport-symbols.mjs; do
+    if [ ! -f "$ASSETS/$asset" ]; then
+        echo "Missing Compose runtime asset: $ASSETS/$asset" >&2
+        exit 1
     fi
 done
 
-if [ -z "$DIR" ] && [ -n "${BUILD_WORKSPACE_DIRECTORY:-}" ]; then
-    CAND="${BUILD_WORKSPACE_DIRECTORY}/bazel-bin/example/cmp/web"
-    if [ -f "${CAND}/web_app.js" ]; then
-        DIR="${CAND}"
-        if [ ! -f "${DIR}/index.html" ] && [ -f "${BUILD_WORKSPACE_DIRECTORY}/example/cmp/web/index.html" ]; then
-            cp "${BUILD_WORKSPACE_DIRECTORY}/example/cmp/web/index.html" "${DIR}/index.html"
-        fi
+# Assemble a complete site without writing into source files or Bazel's output tree.
+SITE="$(mktemp -d "${TMPDIR:-/tmp}/compose-web.XXXXXXXX")"
+SERVER_PID=""
+cleanup() {
+    if [ -n "$SERVER_PID" ]; then
+        kill "$SERVER_PID" 2>/dev/null || true
+        wait "$SERVER_PID" 2>/dev/null || true
     fi
-fi
+    rm -rf "$SITE"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+cp -RL "$ASSETS/." "$SITE/"
+cp "$INDEX" "$SITE/index.html"
 
-if [ -z "$DIR" ]; then
-    if [ -f "index.html" ]; then
-        DIR="$(pwd)"
-    elif [ -n "${BUILD_WORKSPACE_DIRECTORY:-}" ] && [ -f "${BUILD_WORKSPACE_DIRECTORY}/example/cmp/web/index.html" ]; then
-        DIR="${BUILD_WORKSPACE_DIRECTORY}/example/cmp/web"
-    else
-        DIR="$(dirname "$0")"
-    fi
-fi
-
-
-if [ ! -f "${DIR}/index.html" ]; then
-    echo "Error: index.html not found in ${DIR}" >&2
-    exit 1
-fi
-
-# Find free port if 8085 is in use
-if lsof -Pi :"$PORT" -sTCP:LISTEN -t >/dev/null 2>&1; then
-    for p in {8086..8099}; do
-        if ! lsof -Pi :"$p" -sTCP:LISTEN -t >/dev/null 2>&1; then
-            PORT="$p"
-            break
-        fi
-    done
-fi
-
-echo "=========================================================="
-echo " Serving Compose Multiplatform Web Shared Button Demo"
-echo " Document Root: ${DIR}"
-echo " Target URL:    http://localhost:${PORT}"
-echo " (Press Ctrl+C to stop the server)"
-echo "=========================================================="
-
-python3 -m http.server "${PORT}" --directory "${DIR}"
+echo "Compose Multiplatform: http://localhost:$PORT"
+echo "Press Ctrl+C to stop."
+python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$SITE" &
+SERVER_PID=$!
+wait "$SERVER_PID"

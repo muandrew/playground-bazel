@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -42,7 +43,7 @@ fun WebCounterApp(state: CounterButtonState = rememberCounterButtonState()) {
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "Kotlin 2.3.21 • Compose 1.9.5 (Skiko) • Bzlmod",
+                    text = "Compose Multiplatform 1.9.3 • Bazel 8",
                     fontSize = 13.sp,
                     color = Color.Gray,
                 )
@@ -64,42 +65,12 @@ fun WebCounterApp(state: CounterButtonState = rememberCounterButtonState()) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    println("==========================================================")
-    println(" Compose Multiplatform Web (Canvas/Skiko) App A")
-    println(" Shared Material 3 Button")
-    println("==========================================================")
-
-    val isBrowser: Boolean = js("typeof window !== 'undefined' && typeof document !== 'undefined'") as Boolean
-    if (isBrowser) {
-        val root = document.getElementById("root")
-        if (root != null) {
-            println("Attaching Skiko ComposeViewport to #root element...")
-            ComposeViewport(root) {
-                WebCounterApp()
-            }
-            println("ComposeViewport mounted successfully.")
-        } else {
-            println("Warning: #root element not found in DOM.")
+    // Compose 1.9 waits for both the DOM and Skiko's WebAssembly runtime here.
+    ComposeViewport(viewportContainerId = "root") {
+        WebCounterApp()
+        SideEffect {
+            document.getElementById("loading")?.setAttribute("hidden", "")
+            document.getElementById("root")?.setAttribute("data-compose-state", "ready")
         }
-    } else {
-        // Headless execution under Node.js: verify counter model and state
-        println("Running headless verification under Node.js...")
-        val state = CounterButtonState(initialCount = 0)
-        println("Initial button label: ${state.label}")
-        check(state.count == 0) { "Expected count 0 but was ${state.count}" }
-
-        val c1 = state.onClick()
-        println("Click 1 -> ${state.label} (${state.statusText})")
-        check(c1 == 1) { "Expected count 1 but was $c1" }
-
-        val c2 = state.onClick()
-        println("Click 2 -> ${state.label} (${state.statusText})")
-        check(c2 == 2) { "Expected count 2 but was $c2" }
-
-        val c3 = state.onClick()
-        println("Click 3 -> ${state.label} (${state.statusText})")
-        check(c3 == 3) { "Expected count 3 but was $c3" }
-
-        println("Headless verification passed successfully!")
     }
 }

@@ -51,7 +51,7 @@ def _kt_compile_klib_action(
         args.add("--libraries", klib.path)
 
     for opt in kotlinc_opts:
-        args.add("--kotlinc-opts", opt)
+        args.add("--kotlinc-opts=" + opt)
 
     if srcs:
         args.add("--srcs")
@@ -104,7 +104,7 @@ def kt_js_library_impl(ctx):
 def kt_js_binary_impl(ctx):
     toolchain = ctx.toolchains["//kotlin:js_toolchain_type"]
     module_name = ctx.attr.module_name or ctx.label.name
-    output_js = ctx.actions.declare_file(ctx.label.name + ".js")
+    output_js = ctx.actions.declare_file(ctx.label.name + "_files/" + module_name + ".mjs")
     output_executable = ctx.actions.declare_file(ctx.label.name)
 
     direct_klibs = []
@@ -120,6 +120,7 @@ def kt_js_binary_impl(ctx):
     args.add("link-binary")
     args.add("--output-js", output_js.path)
     args.add("--output-executable", output_executable.path)
+    args.add("--runfile-js", ctx.workspace_name + "/" + output_js.short_path)
     args.add("--module-name", module_name)
     args.add("--compiler-jar", toolchain.compiler_jar.path)
     args.add("--backend", "js")
@@ -148,7 +149,7 @@ def kt_js_binary_impl(ctx):
         args.add("--libraries", klib.path)
 
     for opt in ctx.attr.kotlinc_opts:
-        args.add("--kotlinc-opts", opt)
+        args.add("--kotlinc-opts=" + opt)
 
     if ctx.files.srcs:
         args.add("--srcs")
@@ -156,17 +157,25 @@ def kt_js_binary_impl(ctx):
             args.add(src.path)
 
     inputs = depset(
-        direct = ctx.files.srcs + [toolchain.compiler_jar] + plugin_inputs + extra_assets,
+        direct = ctx.files.srcs + [toolchain.compiler_jar] + plugin_inputs,
         transitive = [all_klibs],
     )
 
     outputs = [output_js, output_executable]
-    if ctx.attr.compose_enabled:
-        output_skiko_mjs = ctx.actions.declare_file("skiko.mjs")
-        output_skiko_wasm = ctx.actions.declare_file("skiko.wasm")
-        output_skiko_reexport = ctx.actions.declare_file("js-reexport-symbols.mjs")
-        output_node_modules = ctx.actions.declare_directory("node_modules")
-        outputs.extend([output_skiko_mjs, output_skiko_wasm, output_skiko_reexport, output_node_modules])
+    # Each runtime file is a declared output with an explicit source input. Keep
+    # npm package paths intact so generated bare imports resolve in Node and can
+    # be mapped by the browser's import map.
+    asset_paths = {}
+    for asset in extra_assets:
+        marker = "node_modules/"
+        marker_index = asset.short_path.find(marker)
+        relative_path = asset.short_path[marker_index:] if marker_index >= 0 else asset.basename
+        if relative_path in asset_paths:
+            fail("Duplicate Kotlin JS runtime asset: " + relative_path)
+        asset_paths[relative_path] = True
+        output_asset = ctx.actions.declare_file(ctx.label.name + "_files/" + relative_path)
+        ctx.actions.symlink(output = output_asset, target_file = asset)
+        outputs.append(output_asset)
 
     ctx.actions.run(
         mnemonic = "KotlincLinkJs",
@@ -174,7 +183,7 @@ def kt_js_binary_impl(ctx):
         executable = toolchain.runner,
         arguments = [args],
         inputs = inputs,
-        outputs = outputs,
+        outputs = [output_js, output_executable],
     )
 
     runfiles = ctx.runfiles(files = outputs + ctx.files.data)
@@ -266,7 +275,7 @@ def kt_wasm_binary_impl(ctx):
         plugin_inputs.append(toolchain.compose_plugin_jar)
 
     for opt in ctx.attr.kotlinc_opts:
-        args.add("--kotlinc-opts", opt)
+        args.add("--kotlinc-opts=" + opt)
 
     if ctx.files.srcs:
         args.add("--srcs")
