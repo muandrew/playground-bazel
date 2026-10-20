@@ -27,6 +27,13 @@ object SheetDefaults {
      */
     val CornerRadius: Dp = 16.dp
 
+    /** Side and bottom spacing used by the modal-style Peek and Compact detents. */
+    val ModalSideInset: Dp = 16.dp
+    val ModalBottomInset: Dp = 12.dp
+
+    /** Corner radius used while the sheet is in a modal-style detent. */
+    val ModalCornerRadius: Dp = 24.dp
+
     /**
      * Default shape of the sheet container with rounded top corners (16.dp).
      */

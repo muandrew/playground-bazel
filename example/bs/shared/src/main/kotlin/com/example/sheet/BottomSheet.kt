@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -99,6 +100,7 @@ fun MultiAnchorBottomSheet(
     shape: Shape = SheetDefaults.Shape,
 ) {
     val currentOnDismiss = rememberUpdatedState(onDismiss)
+    val density = LocalDensity.current
     LaunchedEffect(state) {
         // Covers both scrim dismissal and a drag/fling that settles at Hidden.
         snapshotFlow { state.isVisible }
@@ -165,6 +167,31 @@ fun MultiAnchorBottomSheet(
     ) { layoutScope ->
         val currentAnchor = state.currentAnchor
         val targetAnchor = state.targetAnchor
+        val currentOffset = state.offset
+        val fullOffset = state.anchoredDraggableState.anchors.positionOf(SheetAnchor.Full)
+        val compactOffset = state.anchoredDraggableState.anchors.positionOf(SheetAnchor.Compact)
+        val modalProgress = when {
+            currentOffset.isNaN() || fullOffset.isNaN() || compactOffset.isNaN() -> 0f
+            compactOffset <= fullOffset -> if (currentOffset >= compactOffset) 1f else 0f
+            currentOffset >= compactOffset -> 1f
+            currentOffset <= fullOffset -> 0f
+            else -> ((currentOffset - fullOffset) / (compactOffset - fullOffset)).coerceIn(0f, 1f)
+        }
+        val modalSideInset = SheetDefaults.ModalSideInset * modalProgress
+        val modalBottomInset = SheetDefaults.ModalBottomInset * modalProgress
+        val modalHeight = if (!currentOffset.isNaN()) {
+            (layoutScope.maxHeight - with(density) { currentOffset.toDp() }).coerceAtLeast(0.dp)
+        } else {
+            layoutScope.maxHeight * config.fullFraction
+        }
+        val sheetHeight = layoutScope.maxHeight * config.fullFraction * (1f - modalProgress) +
+            modalHeight * modalProgress
+        val modalShape = RoundedCornerShape(
+            topStart = SheetDefaults.CornerRadius + (SheetDefaults.ModalCornerRadius - SheetDefaults.CornerRadius) * modalProgress,
+            topEnd = SheetDefaults.CornerRadius + (SheetDefaults.ModalCornerRadius - SheetDefaults.CornerRadius) * modalProgress,
+            bottomStart = SheetDefaults.ModalCornerRadius * modalProgress,
+            bottomEnd = SheetDefaults.ModalCornerRadius * modalProgress,
+        )
 
         // If completely hidden and not currently animating, do not render surface
         if (currentAnchor != SheetAnchor.Hidden || targetAnchor != SheetAnchor.Hidden) {
@@ -172,12 +199,14 @@ fun MultiAnchorBottomSheet(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(layoutScope.maxHeight * config.fullFraction)
+                .padding(horizontal = modalSideInset)
+                .height(sheetHeight)
                 .offset {
                     if (state.anchoredDraggableState.offset.isNaN()) {
                         IntOffset(0, 0)
                     } else {
-                        IntOffset(0, state.anchoredDraggableState.offset.roundToInt())
+                        val bottomInsetPx = with(density) { modalBottomInset.roundToPx() }
+                        IntOffset(0, state.anchoredDraggableState.offset.roundToInt() - bottomInsetPx)
                     }
                 }
                 .anchoredDraggable(
@@ -185,7 +214,7 @@ fun MultiAnchorBottomSheet(
                     orientation = Orientation.Vertical,
                 )
                 .nestedScroll(nestedScrollConnection),
-            shape = shape,
+            shape = if (modalProgress > 0f) modalShape else shape,
             color = containerColor,
             shadowElevation = SheetDefaults.Elevation,
         ) {
