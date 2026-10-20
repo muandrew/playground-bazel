@@ -1,5 +1,5 @@
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
-load("//kotlin:js.bzl", "kt_js_library")
+load("@kmp_rules//kotlin:js.bzl", "kt_js_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -7,7 +7,7 @@ package(default_visibility = ["//visibility:public"])
 kt_jvm_library(
     name = "libc-jvm",
     srcs = glob(["src/commonMain/kotlin/**/*.kt"]),
-    kotlinc_opts = "//prototype/cmp/shared:kt_kotlinc_options",
+    kotlinc_opts = "//shared:kt_kotlinc_options",
     deps = [
         "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
     ],

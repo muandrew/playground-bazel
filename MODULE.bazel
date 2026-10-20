@@ -12,7 +12,7 @@ bazel_dep(name = "rules_jvm_external", version = "7.1")
 bazel_dep(name = "rules_android", version = "0.7.1")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
-# Compose Multiplatform JS Canvas/Skiko KLIB repository for example/cmp.
+# Compose Multiplatform JS Canvas/Skiko KLIB repository for the root toolchain.
 compose_ui_js = use_repo_rule("//kotlin:repositories.bzl", "compose_ui_js")
 compose_ui_js(name = "compose_ui_js")
 
@@ -39,7 +39,7 @@ use_repo(
     "kotlinx_serialization_json_jvm",
 )
 
-# Compose 1.9.3 dependencies retained for example/cmp.
+# Compose 1.9.3 dependencies used by prototype/cmp in the root workspace.
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(
     name = "maven",
@@ -77,7 +77,7 @@ maven.install(
 )
 use_repo(maven, "maven")
 
-# Android dependencies retained for example/cmp.
+# Android dependencies used by prototype/cmp in the root workspace.
 maven.install(
     name = "android_maven",
     aar_import_bzl_label = "@rules_android//rules:rules.bzl",

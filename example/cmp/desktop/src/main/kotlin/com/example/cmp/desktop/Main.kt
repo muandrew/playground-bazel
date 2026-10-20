@@ -37,7 +37,7 @@ fun CounterApp(state: CounterButtonState = rememberCounterButtonState()) {
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "Kotlin 2.3.21 • Compose 1.9.5 • Bzlmod",
+                    text = "Kotlin 2.3.21 • Compose 1.9.3 • Bzlmod",
                     fontSize = 13.sp,
                     color = Color.Gray,
                 )

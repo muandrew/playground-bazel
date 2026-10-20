@@ -1,0 +1,17 @@
+load("@rules_kotlin//kotlin:core.bzl", "kt_compiler_plugin", "kt_kotlinc_options")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_kotlinc_options(
+    name = "kt_kotlinc_options",
+    api_version = "2.3",
+    language_version = "2.3",
+    jvm_target = "17",
+)
+
+kt_compiler_plugin(
+    name = "compose_compiler_plugin",
+    id = "androidx.compose.compiler.plugins.kotlin",
+    target_embedded_compiler = True,
+    deps = ["@maven//:org_jetbrains_kotlin_kotlin_compose_compiler_plugin_embeddable"],
+)

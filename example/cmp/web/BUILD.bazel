@@ -1,5 +1,5 @@
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
+load("@kmp_rules//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -10,7 +10,7 @@ kt_js_binary(
     compose_enabled = True,
     module_name = "web_app",
     deps = [
-        "//example/cmp/libb:libb-js",
+        "//libb:libb-js",
     ],
 )
 
@@ -19,7 +19,7 @@ kt_js_test(
     name = "counter_state_test",
     srcs = glob(["src/test/kotlin/**/*.kt"]),
     compose_enabled = True,
-    deps = ["//example/cmp/libb:libb-js"],
+    deps = ["//libb:libb-js"],
 )
 
 # Preserve the original test label while making its scope explicit above.
