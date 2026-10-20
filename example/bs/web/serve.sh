@@ -3,7 +3,7 @@ set -euo pipefail
 
 PORT="${1:-8086}"
 if ! [[ "$PORT" =~ ^[0-9]{1,5}$ ]] || (( 10#$PORT < 1 || 10#$PORT > 65535 )); then
-    echo "Usage: bazel run //web:serve -- [port: 1-65535]" >&2
+    echo "Usage: bazel run :serve -- [port: 1-65535]" >&2
     exit 1
 fi
 PORT="$((10#$PORT))"
@@ -27,12 +27,12 @@ rlocation() {
             return
         fi
     fi
-    echo "Missing runfile: $relative. Run this server with bazel run //web:serve." >&2
+    echo "Missing runfile: $relative. Run this server with bazel run :serve." >&2
     return 1
 }
 
-INDEX="$(rlocation _main/example/bs/web/index.html)"
-APP="$(rlocation _main/example/bs/web/web_app_files/bs_app.mjs)"
+INDEX="$(rlocation _main/web/index.html)"
+APP="$(rlocation _main/web/web_app_files/bs_app.mjs)"
 ASSETS="$(dirname "$APP")"
 for asset in skiko.mjs skiko.wasm js-reexport-symbols.mjs; do
     if [ ! -f "$ASSETS/$asset" ]; then
