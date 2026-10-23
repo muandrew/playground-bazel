@@ -1,0 +1,21 @@
+load("//kotlin:defs.bzl", "kt_js_library", "kt_js_preview", "simple_http")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_js_library(
+    name = "app",
+    srcs = ["App.kt"],
+    compose_enabled = True,
+)
+
+kt_js_preview(
+    name = "preview",
+    deps = [":app"],
+    main_fun = "com.example.playground.App",
+    title = "Compose Playground",
+)
+
+simple_http(
+    name = "serve",
+    srcs = [":preview"],
+)

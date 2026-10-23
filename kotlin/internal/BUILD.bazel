@@ -6,11 +6,23 @@ exports_files([
     "runner.py",
     "providers.bzl",
     "compile.bzl",
+    "simple_http.py.tpl",
 ])
 
 filegroup(
     name = "runner",
     srcs = ["runner.py"],
+)
+
+filegroup(
+    name = "preview_packager",
+    srcs = ["preview_packager.py"],
+)
+
+bzl_library(
+    name = "preview_bzl",
+    srcs = ["preview.bzl"],
+    deps = [":providers_bzl"],
 )
 
 bzl_library(

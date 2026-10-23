@@ -51,6 +51,7 @@ bzl_library(
     name = "defs",
     srcs = [
         "defs.bzl",
+        "http.bzl",
         "js.bzl",
         "native.bzl",
         "toolchain.bzl",
@@ -58,6 +59,7 @@ bzl_library(
     ],
     deps = [
         "//kotlin/internal:compile_bzl",
+        "//kotlin/internal:preview_bzl",
         "//kotlin/internal:providers_bzl",
     ],
 )
