@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serve the files declared by a simple_http Bazel target."""
+"""Serve the files declared by a ktx_simple_http Bazel target."""
 
 import argparse
 from functools import partial

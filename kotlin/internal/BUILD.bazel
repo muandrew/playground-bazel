@@ -6,7 +6,7 @@ exports_files([
     "runner.py",
     "providers.bzl",
     "compile.bzl",
-    "simple_http.py.tpl",
+    "ktx_simple_http.py.tpl",
 ])
 
 filegroup(

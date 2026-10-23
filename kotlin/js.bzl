@@ -1,7 +1,7 @@
 """Kotlin JS rules and a single-file Compose application preview."""
 
 load("//kotlin/internal:compile.bzl", "kt_js_binary_impl", "kt_js_library_impl", "kt_js_test_impl")
-load("//kotlin/internal:preview.bzl", "kt_js_preview_entry", "kt_js_preview_html")
+load("//kotlin/internal:preview.bzl", "ktx_js_preview_entry", "ktx_js_preview_html")
 load("//kotlin/internal:providers.bzl", "KtJsInfo")
 
 kt_js_library = rule(
@@ -116,7 +116,7 @@ kt_js_test = rule(
     doc = "Runs Kotlin JS tests using Node.js.",
 )
 
-def kt_js_preview(
+def ktx_js_preview(
         name,
         main_fun,
         deps = [],
@@ -144,7 +144,7 @@ def kt_js_preview(
         "tags": kwargs.get("tags", []) + ["manual"],
         "testonly": kwargs.get("testonly", False),
     }
-    kt_js_preview_entry(
+    ktx_js_preview_entry(
         name = name + "_entry",
         main_fun = main_fun,
         **internal
@@ -159,7 +159,7 @@ def kt_js_preview(
         kotlinc_opts = kotlinc_opts,
         **internal
     )
-    kt_js_preview_html(
+    ktx_js_preview_html(
         name = name,
         app = ":" + name + "_app",
         title = title,

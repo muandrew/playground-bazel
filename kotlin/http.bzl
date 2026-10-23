@@ -5,7 +5,7 @@ def _runfile_path(ctx, file):
         return file.short_path[3:]
     return ctx.workspace_name + "/" + file.short_path
 
-def _simple_http_impl(ctx):
+def _ktx_simple_http_impl(ctx):
     if ctx.attr.port < 1 or ctx.attr.port > 65535:
         fail("port must be between 1 and 65535", attr = "port")
     if not ctx.files.srcs:
@@ -37,8 +37,8 @@ def _simple_http_impl(ctx):
         runfiles = ctx.runfiles(files = ctx.files.srcs),
     )]
 
-simple_http = rule(
-    implementation = _simple_http_impl,
+ktx_simple_http = rule(
+    implementation = _ktx_simple_http_impl,
     executable = True,
     attrs = {
         "srcs": attr.label_list(
@@ -48,7 +48,7 @@ simple_http = rule(
         ),
         "port": attr.int(default = 8085, doc = "Default port, overridden at runtime by -p PORT or --port PORT."),
         "_server": attr.label(
-            default = Label("//kotlin/internal:simple_http.py.tpl"),
+            default = Label("//kotlin/internal:ktx_simple_http.py.tpl"),
             allow_single_file = True,
         ),
     },

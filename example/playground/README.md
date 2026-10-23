@@ -19,7 +19,7 @@ bazel build //example/playground:preview
 # bazel-bin/example/playground/preview.html
 ```
 
-`kt_js_preview` takes `deps` containing `kt_js_library` targets and a `main_fun`
+`ktx_js_preview` takes `deps` containing `kt_js_library` targets and a `main_fun`
 with the fully qualified name of a public `@Composable` function callable without
 arguments. It generates the `ComposeViewport` entry point and embeds the linked
 Kotlin/JS app, JavaScript dependencies, and Skiko WebAssembly runtime into one
@@ -28,7 +28,7 @@ or CDN. This uses the existing Kotlin/JS Compose Canvas toolchain with Wasm Skik
 
 Both convenience rules can be loaded from `//kotlin:defs.bzl` (or
 `@rules_kotlin_multiplatform//kotlin:defs.bzl` in a consuming module).
-`simple_http(srcs = [...], port = 8085)` serves declared files on localhost and
+`ktx_simple_http(srcs = [...], port = 8085)` serves declared files on localhost and
 accepts `-p PORT` or `--port PORT`. Files from its package retain package-relative
 paths; other files retain repository-relative paths. A sole HTML input is also
 served at `/`. The build tools and server require Python 3 on `PATH`.

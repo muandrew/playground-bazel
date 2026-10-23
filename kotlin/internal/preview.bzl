@@ -32,7 +32,7 @@ fun main() {
 """ % ".".join(["`%s`" % part for part in parts]))
     return [DefaultInfo(files = depset([entry]))]
 
-kt_js_preview_entry = rule(
+ktx_js_preview_entry = rule(
     implementation = _preview_entry_impl,
     attrs = {"main_fun": attr.string(mandatory = True)},
 )
@@ -63,7 +63,7 @@ def _preview_html_impl(ctx):
     )
     return [DefaultInfo(files = depset([html]), runfiles = ctx.runfiles(files = [html]))]
 
-kt_js_preview_html = rule(
+ktx_js_preview_html = rule(
     implementation = _preview_html_impl,
     attrs = {
         "app": attr.label(mandatory = True, providers = [KtJsInfo]),
