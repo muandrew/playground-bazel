@@ -1,7 +1,7 @@
-"""Kotlin JS rules and a single-file Compose application preview."""
+"""Kotlin JS rules and static-file Compose application previews."""
 
 load("//kotlin/internal:compile.bzl", "kt_js_binary_impl", "kt_js_library_impl", "kt_js_test_impl")
-load("//kotlin/internal:preview.bzl", "ktx_js_preview_entry", "ktx_js_preview_html")
+load("//kotlin/internal:preview.bzl", "ktx_js_preview_entry", _preview_binary_rule = "preview_binary_rule")
 load("//kotlin/internal:providers.bzl", "KtJsInfo")
 
 kt_js_library = rule(
@@ -116,7 +116,7 @@ kt_js_test = rule(
     doc = "Runs Kotlin JS tests using Node.js.",
 )
 
-def ktx_js_preview(
+def ktx_js_preview_binary(
         name,
         main_fun,
         deps = [],
@@ -126,10 +126,10 @@ def ktx_js_preview(
         compose_runtime_assets = [],
         kotlinc_opts = [],
         **kwargs):
-    """Package a Compose Kotlin/JS app and its Skiko Wasm runtime into one HTML.
+    """Build a Compose Kotlin/JS app as a set of website files.
 
     Args:
-        name: Target name; produces <name>.html.
+        name: Target name; provides index.html and runtime files through StaticFilesInfo.
         main_fun: Fully qualified @Composable function callable without arguments.
         deps: kt_js_library targets containing the app and its dependencies.
         srcs: Optional additional Kotlin sources.
@@ -157,11 +157,13 @@ def ktx_js_preview(
         compose_runtime_klibs = compose_runtime_klibs,
         compose_runtime_assets = compose_runtime_assets,
         kotlinc_opts = kotlinc_opts,
+        module_name = name,
         **internal
     )
-    ktx_js_preview_html(
+    _preview_binary_rule(
         name = name,
         app = ":" + name + "_app",
+        module_name = name,
         title = title,
         **kwargs
     )

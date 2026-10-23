@@ -56,10 +56,26 @@ bzl_library(
         "native.bzl",
         "toolchain.bzl",
         "wasm.bzl",
+        "zip.bzl",
     ],
     deps = [
         "//kotlin/internal:compile_bzl",
         "//kotlin/internal:preview_bzl",
         "//kotlin/internal:providers_bzl",
+        "//kotlin/internal:static_files_bzl",
+        ":http_bzl",
+        ":zip_bzl",
     ],
+)
+
+bzl_library(
+    name = "http_bzl",
+    srcs = ["http.bzl"],
+    deps = ["//kotlin/internal:providers_bzl", "//kotlin/internal:static_files_bzl"],
+)
+
+bzl_library(
+    name = "zip_bzl",
+    srcs = ["zip.bzl"],
+    deps = ["//kotlin/internal:providers_bzl", "//kotlin/internal:static_files_bzl"],
 )

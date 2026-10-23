@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_python//python:py_binary.bzl", "py_binary")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -14,15 +15,21 @@ filegroup(
     srcs = ["runner.py"],
 )
 
-filegroup(
-    name = "preview_packager",
-    srcs = ["preview_packager.py"],
+py_binary(
+    name = "zipper",
+    srcs = ["ktx_zip.py"],
+    main = "ktx_zip.py",
 )
 
 bzl_library(
     name = "preview_bzl",
     srcs = ["preview.bzl"],
-    deps = [":providers_bzl"],
+    deps = [":providers_bzl", ":static_files_bzl"],
+)
+
+bzl_library(
+    name = "static_files_bzl",
+    srcs = ["static_files.bzl"],
 )
 
 bzl_library(

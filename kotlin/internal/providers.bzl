@@ -29,3 +29,10 @@ KtNativeInfo = provider(
         "module_name": "The Kotlin Native module name.",
     },
 )
+
+StaticFilesInfo = provider(
+    doc = "Website files mapped to paths relative to the website root.",
+    fields = {
+        "entries": "List of structs with path and file fields.",
+    },
+)

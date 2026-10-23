@@ -1,4 +1,4 @@
-load("//kotlin:defs.bzl", "kt_js_library", "ktx_js_preview", "ktx_simple_http")
+load("//kotlin:defs.bzl", "kt_js_library", "ktx_js_preview_binary", "ktx_simple_http", "ktx_zip")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -8,7 +8,7 @@ kt_js_library(
     compose_enabled = True,
 )
 
-ktx_js_preview(
+ktx_js_preview_binary(
     name = "preview",
     deps = [":app"],
     main_fun = "com.example.playground.App",
@@ -17,5 +17,10 @@ ktx_js_preview(
 
 ktx_simple_http(
     name = "serve",
-    srcs = [":preview"],
+    deps = [":preview"],
+)
+
+ktx_zip(
+    name = "zip",
+    deps = [":preview"],
 )
