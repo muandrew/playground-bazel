@@ -1,17 +1,16 @@
-load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("@kmp_rules//kotlin:js.bzl", "kt_js_binary", "kt_js_test")
+load("@kmp_rules//kotlin:defs.bzl", "kt_js_test", "ktx_js_preview_binary", "ktx_simple_http", "ktx_zip")
 
 package(default_visibility = ["//visibility:public"])
 
 # Web App A binary (Compose Multiplatform Canvas/Skiko target)
-kt_js_binary(
-    name = "web_app",
+ktx_js_preview_binary(
+    name = "preview",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
-    compose_enabled = True,
-    module_name = "web_app",
+    main_fun = "com.example.cmp.web.WebCounterApp",
     deps = [
         "//libb:libb-js",
     ],
+    title = "Compose Multiplatform Web - Shared Material 3 Button",
 )
 
 # Runs shared state assertions in Node.js. Browser rendering is checked separately.
@@ -28,12 +27,13 @@ test_suite(
     tests = [":counter_state_test"],
 )
 
-# Convenience target to serve web app locally in browser
-sh_binary(
+# Serve the generated static preview files locally.
+ktx_simple_http(
     name = "serve",
-    srcs = ["serve.sh"],
-    data = [
-        ":web_app",
-        "index.html",
-    ],
+    deps = [":preview"],
+)
+
+ktx_zip(
+    name = "zip",
+    deps = [":preview"],
 )

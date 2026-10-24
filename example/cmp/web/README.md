@@ -7,13 +7,13 @@ compiler is 2.3.21. This example uses the Kotlin/JS canvas target and is a
 standalone Bazel workspace rooted at `example/cmp`.
 
 The workspace pins Bazel 8.4.2. It fetches the Kotlin Multiplatform rules from
-this repository at commit `62c77794e99abbe66ba8e0619529c308d1b3e485` using a
+this repository at commit `e2834f3` using a
 SHA-verified archive, then resolves Kotlin 2.3.21 and its own Compose 1.9.x
 dependency graph. Run commands from `example/cmp`. Building and serving require
 JDK 17 or later and Python 3. Node.js is also required for the state test. No
 Gradle or npm install is needed.
 
-Start the server:
+Start the local preview:
 
 ```sh
 bazel run //:serve
@@ -26,8 +26,15 @@ interface and exits with an error if that port is already in use.
 The page should show a dark canvas and a **Count: 0** button. Each click should
 increment the button label and the status below it. Refreshing should reset the
 count. The page displays loading and startup errors so a runtime failure is
-visible. The server assembles the HTML, JavaScript modules, npm dependencies, and
-Skiko assets in a temporary directory and removes it when stopped.
+visible. The preview target generates separate website files. `//:serve` serves
+them locally, while `//:zip` packages them for upload to a static host.
+
+Build the static-host archive from the workspace root:
+
+```sh
+bazel build //:zip
+# bazel-bin/web/zip.zip
+```
 
 Run the shared state assertions under Node.js:
 

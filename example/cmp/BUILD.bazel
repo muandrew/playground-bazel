@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 # Convenience alias for the primary web app
 alias(
     name = "web",
-    actual = "//web:web_app",
+    actual = "//web:preview",
 )
 
 # Convenience alias for the desktop app
@@ -22,4 +22,9 @@ alias(
 alias(
     name = "serve",
     actual = "//web:serve",
+)
+
+alias(
+    name = "zip",
+    actual = "//web:zip",
 )

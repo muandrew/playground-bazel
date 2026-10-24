@@ -5,12 +5,12 @@ Kotlin 2.3.21, Compose Multiplatform 1.9.3, Material 3 1.9.0, and Skiko
 0.9.22.2.
 
 The workspace fetches the Kotlin Multiplatform rules from this repository at
-commit `62c77794e99abbe66ba8e0619529c308d1b3e485`, using a SHA-verified GitHub
+commit `e2834f3`, using a SHA-verified GitHub
 archive. It resolves its own module and Maven dependency locks. Run commands
 from this directory with Bazelisk, Java 17 or later, and Python 3 available.
 
 ```sh
-bazel build //:web //:desktop //:android
+bazel build //:web //:zip //:desktop //:android
 bazel run //:desktop
 bazel run //:serve
 ```

@@ -11,18 +11,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.ComposeViewport
 import com.example.cmp.libb.CounterButtonState
 import com.example.cmp.libb.SharedCounterButton
 import com.example.cmp.libb.rememberCounterButtonState
-import kotlinx.browser.document
 
 /**
  * Compose Multiplatform Web Application UI.
@@ -59,18 +55,6 @@ fun WebCounterApp(state: CounterButtonState = rememberCounterButtonState()) {
                     color = Color.LightGray,
                 )
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalComposeUiApi::class)
-fun main() {
-    // Compose 1.9 waits for both the DOM and Skiko's WebAssembly runtime here.
-    ComposeViewport(viewportContainerId = "root") {
-        WebCounterApp()
-        SideEffect {
-            document.getElementById("loading")?.setAttribute("hidden", "")
-            document.getElementById("root")?.setAttribute("data-compose-state", "ready")
         }
     }
 }

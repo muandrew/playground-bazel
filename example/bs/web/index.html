@@ -40,7 +40,7 @@
     <script type="importmap">
     {
         "imports": {
-            "@js-joda/core": "./node_modules/@js-joda/core/dist/js-joda.esm.js"
+            "@js-joda/core": "./web_app_files/node_modules/@js-joda/core/dist/js-joda.esm.js"
         }
     }
     </script>
@@ -57,7 +57,7 @@
         }
         window.addEventListener("error", event => showError(event.error || event.message));
         window.addEventListener("unhandledrejection", event => showError(event.reason));
-        import("./bs_app.mjs").catch(showError);
+        import("./web_app_files/bs_app.mjs").catch(showError);
     </script>
 </body>
 </html>

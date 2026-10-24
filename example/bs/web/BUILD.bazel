@@ -1,21 +1,22 @@
-load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
-load("@kmp_rules//kotlin:js.bzl", "kt_js_binary")
+load("@kmp_rules//kotlin:defs.bzl", "kt_js_binary", "ktx_simple_http", "ktx_zip")
 
 package(default_visibility = ["//visibility:public"])
 
 kt_js_binary(
     name = "web_app",
     srcs = glob(["src/main/kotlin/**/*.kt"]),
-    compose_enabled = True,
     module_name = "bs_app",
+    compose_enabled = True,
     deps = ["//shared:shared-js"],
 )
 
-sh_binary(
+# Serve the hand-authored page alongside the generated app files locally.
+ktx_simple_http(
     name = "serve",
-    srcs = ["serve.sh"],
-    data = [
-        ":web_app",
-        "index.html",
-    ],
+    srcs = [":web_app", "index.html"],
+)
+
+ktx_zip(
+    name = "zip",
+    srcs = [":web_app", "index.html"],
 )

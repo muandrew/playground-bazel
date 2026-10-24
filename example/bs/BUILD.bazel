@@ -21,6 +21,11 @@ alias(
 )
 
 alias(
+    name = "zip",
+    actual = "//web:zip",
+)
+
+alias(
     name = "test",
     actual = ":web_test",
 )

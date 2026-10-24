@@ -5,8 +5,7 @@ directory, not from the repository root.
 
 It demonstrates consuming this repository's Kotlin Multiplatform rules as an
 external dependency: [`MODULE.bazel`](MODULE.bazel) fetches the SHA-verified
-archive for commit `62c77794e99abbe66ba8e0619529c308d1b3e485`, the revision
-immediately before this example was added. The workspace does not use a local
+archive for commit `e2834f3`. The workspace does not use a local
 path override or any dependency repository from its parent checkout.
 
 The sample pins Bazel 9.0.0, Compose Multiplatform 1.12.0 (Material 3
@@ -20,7 +19,7 @@ WebAssembly runtime; no Gradle or npm install is required.
 
 ```sh
 cd example/bs
-bazel build //:web //:desktop
+bazel build //:web //:zip //:desktop
 bazel run //:desktop
 ```
 
@@ -42,6 +41,11 @@ bazel run //:serve
 
 Pass another port with `bazel run //:serve -- 8090`. The server binds to
 loopback and cleans its temporary staging directory on exit.
+
+`bazel build //:zip` creates `bazel-bin/web/zip.zip`, ready to extract into a
+static host's document root. The browser example keeps its hand-authored
+`web/index.html`; both `//:serve` and `//:zip` consume that page together with
+the `kt_js_binary` output files.
 
 The fetched prior revision predates the custom rule's test metadata, so the
 state test is built with `bazel build //:test`; its executable can be invoked

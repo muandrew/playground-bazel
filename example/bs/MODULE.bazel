@@ -1,13 +1,13 @@
 module(name = "compose_bottom_sheet_example", version = "0.1.0")
 
 # Pull the Kotlin Multiplatform Starlark rules from this repository as a
-# consumer would. This immutable revision predates this standalone example.
+# consumer would, including the static preview file rules.
 http = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http(
     name = "kmp_rules",
-    urls = ["https://github.com/muandrew/playground-bazel/archive/62c77794e99abbe66ba8e0619529c308d1b3e485.tar.gz"],
-    sha256 = "464d15f4e07559c53ec8b84cf261133fb576b35c2a52b31806aa068fc2bcb36b",
-    strip_prefix = "playground-bazel-62c77794e99abbe66ba8e0619529c308d1b3e485",
+    urls = ["https://github.com/muandrew/playground-bazel/archive/e2834f3.tar.gz"],
+    sha256 = "8a496ec4b609f3309419d9364b64fd32b428751d36c14c310784eafb74e15162",
+    strip_prefix = "playground-bazel-e2834f3f59b61844185f1e057072669211a5cdad",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
@@ -17,6 +17,7 @@ bazel_dep(name = "rules_android", version = "0.7.1")
 bazel_dep(name = "rules_java", version = "9.9.0")
 bazel_dep(name = "rules_jvm_external", version = "7.1")
 bazel_dep(name = "rules_kotlin", version = "2.4.20")
+bazel_dep(name = "rules_python", version = "1.7.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 
 # Compose 1.12.0 JS/Skiko runtime used both by the fetched default toolchain
